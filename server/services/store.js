@@ -132,11 +132,26 @@ function readLocalStore() {
   return store;
 }
 
+function safeWriteJsonSync(filePath, data) {
+  const tmpPath = `${filePath}.${Date.now()}-${Math.random().toString(36).substring(2, 8)}.tmp`;
+  try {
+    const content = JSON.stringify(data, null, 2);
+    fs.writeFileSync(tmpPath, content, 'utf8');
+    fs.renameSync(tmpPath, filePath);
+  } catch (e) {
+    console.error(`Error safely writing ${filePath}:`, e);
+    if (fs.existsSync(tmpPath)) {
+      try { fs.unlinkSync(tmpPath); } catch(_) {}
+    }
+    throw e;
+  }
+}
+
 function writeLocalStore(store) {
   try {
-    fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 2), 'utf8');
-    if (store.treks) fs.writeFileSync(TREKS_FILE, JSON.stringify(store.treks, null, 2), 'utf8');
-    if (store.trips) fs.writeFileSync(TRIPS_FILE, JSON.stringify(store.trips, null, 2), 'utf8');
+    safeWriteJsonSync(STORE_FILE, store);
+    if (store.treks) safeWriteJsonSync(TREKS_FILE, store.treks);
+    if (store.trips) safeWriteJsonSync(TRIPS_FILE, store.trips);
   } catch (e) {
     console.error('Error writing local store:', e);
   }
@@ -185,29 +200,30 @@ async function saveTrek(trekData) {
   const treks = await getTreks();
   const existingIdx = treks.findIndex(t => t.id === trekData.id || t.slug === trekData.id);
   const now = Date.now();
+  const existingTrek = existingIdx !== -1 ? treks[existingIdx] : {};
 
-  const trekObj = {
-    id: trekData.id || 'trek-' + now,
-    name: trekData.name || 'Untitled Trek',
-    slug: trekData.slug || trekData.id || ('trek-' + now),
-    category: trekData.category || 'Western Ghats',
-    location: trekData.location || '',
-    date: trekData.date || 'Every Friday Departure',
-    duration: trekData.duration || '2 Days',
-    difficulty: trekData.difficulty || 'Moderate',
-    price: Number(trekData.price || 0),
-    image: trekData.image || '',
-    coverImage: trekData.coverImage || trekData.image || '',
-    featuredImage: trekData.featuredImage || '',
-    shortDescription: trekData.shortDescription || trekData.description || '',
-    description: trekData.description || trekData.shortDescription || '',
-    featured: Boolean(trekData.featured),
-    published: trekData.published !== false,
-    itinerary: trekData.itinerary || '',
-    inclusions: trekData.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
-    created_at: trekData.created_at || now,
+  const trekObj = Object.assign({}, existingTrek, trekData, {
+    id: trekData.id || existingTrek.id || 'trek-' + now,
+    name: trekData.name || existingTrek.name || 'Untitled Trek',
+    slug: trekData.slug || trekData.id || existingTrek.slug || ('trek-' + now),
+    category: trekData.category || existingTrek.category || 'Western Ghats',
+    location: trekData.location || existingTrek.location || '',
+    date: trekData.date || existingTrek.date || 'Every Friday Departure',
+    duration: trekData.duration || existingTrek.duration || '2 Days',
+    difficulty: trekData.difficulty || existingTrek.difficulty || 'Moderate',
+    price: Number(trekData.price !== undefined ? trekData.price : (existingTrek.price || 0)),
+    image: trekData.image || existingTrek.image || '',
+    coverImage: trekData.coverImage || trekData.image || existingTrek.coverImage || '',
+    featuredImage: trekData.featuredImage || existingTrek.featuredImage || '',
+    shortDescription: trekData.shortDescription || trekData.description || existingTrek.shortDescription || '',
+    description: trekData.description || trekData.shortDescription || existingTrek.description || '',
+    featured: trekData.featured !== undefined ? Boolean(trekData.featured) : Boolean(existingTrek.featured),
+    published: trekData.published !== undefined ? trekData.published !== false : (existingTrek.published !== false),
+    itinerary: trekData.itinerary !== undefined ? trekData.itinerary : (existingTrek.itinerary || ''),
+    inclusions: trekData.inclusions || existingTrek.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
+    created_at: trekData.created_at || existingTrek.created_at || now,
     updated_at: now
-  };
+  });
 
   if (db.isDbConnected()) {
     try {
@@ -306,28 +322,29 @@ async function saveTrip(tripData) {
   const trips = await getTrips();
   const existingIdx = trips.findIndex(t => t.id === tripData.id || t.slug === tripData.id);
   const now = Date.now();
+  const existingTrip = existingIdx !== -1 ? trips[existingIdx] : {};
 
-  const tripObj = {
-    id: tripData.id || 'trip-' + now,
-    name: tripData.name || tripData.title || 'Untitled Trip',
-    title: tripData.title || tripData.name || 'Untitled Trip',
-    slug: tripData.slug || tripData.id || ('trip-' + now),
-    category: tripData.category || 'Weekend Getaway',
-    location: tripData.location || '',
-    date: tripData.date || 'Every Friday Departure',
-    duration: tripData.duration || '2 Days',
-    difficulty: tripData.difficulty || 'Easy',
-    price: Number(tripData.price || 0),
-    image: tripData.image || tripData.coverImage || '',
-    coverImage: tripData.coverImage || tripData.image || '',
-    shortDescription: tripData.shortDescription || tripData.description || '',
-    description: tripData.description || tripData.shortDescription || '',
-    itinerary: tripData.itinerary || '',
-    inclusions: tripData.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
-    published: tripData.published !== false,
-    created_at: tripData.created_at || now,
+  const tripObj = Object.assign({}, existingTrip, tripData, {
+    id: tripData.id || existingTrip.id || 'trip-' + now,
+    name: tripData.name || tripData.title || existingTrip.name || 'Untitled Trip',
+    title: tripData.title || tripData.name || existingTrip.title || 'Untitled Trip',
+    slug: tripData.slug || tripData.id || existingTrip.slug || ('trip-' + now),
+    category: tripData.category || existingTrip.category || 'Weekend Getaway',
+    location: tripData.location || existingTrip.location || '',
+    date: tripData.date || existingTrip.date || 'Every Friday Departure',
+    duration: tripData.duration || existingTrip.duration || '2 Days',
+    difficulty: tripData.difficulty || existingTrip.difficulty || 'Easy',
+    price: Number(tripData.price !== undefined ? tripData.price : (existingTrip.price || 0)),
+    image: tripData.image || tripData.coverImage || existingTrip.image || '',
+    coverImage: tripData.coverImage || tripData.image || existingTrip.coverImage || '',
+    shortDescription: tripData.shortDescription || tripData.description || existingTrip.shortDescription || '',
+    description: tripData.description || tripData.shortDescription || existingTrip.description || '',
+    itinerary: tripData.itinerary !== undefined ? tripData.itinerary : (existingTrip.itinerary || ''),
+    inclusions: tripData.inclusions || existingTrip.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
+    published: tripData.published !== undefined ? tripData.published !== false : (existingTrip.published !== false),
+    created_at: tripData.created_at || existingTrip.created_at || now,
     updated_at: now
-  };
+  });
 
   if (db.isDbConnected()) {
     try {

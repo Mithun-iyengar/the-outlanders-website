@@ -256,12 +256,35 @@
 
   // === TREKS CRUD ===
   async function getTreks(category) {
-    const query = category ? `?category=${encodeURIComponent(category)}` : '';
-    return await apiRequest(`/treks${query}`);
+    try {
+      const query = category ? `?category=${encodeURIComponent(category)}` : '';
+      const res = await apiRequest(`/treks${query}`);
+      if (Array.isArray(res) && res.length > 0) return res;
+      if (Array.isArray(res)) return res;
+    } catch (e) {
+      console.warn('API getTreks failed, fallback to static /data/treks.json:', e.message);
+    }
+    try {
+      const dataPath = window.location.pathname.includes('/frontend/') || window.location.pathname.includes('/admin/') ? '../data/treks.json' : 'data/treks.json';
+      const res = await fetch(`${dataPath}?t=${Date.now()}`);
+      if (res.ok) {
+        let list = await res.json();
+        if (category && Array.isArray(list)) {
+          list = list.filter(t => (t.category || '').toLowerCase() === category.toLowerCase());
+        }
+        return list;
+      }
+    } catch(e) {}
+    return [];
   }
 
   async function getTrekById(id) {
-    return await apiRequest(`/treks/${encodeURIComponent(id)}`);
+    try {
+      return await apiRequest(`/treks/${encodeURIComponent(id)}`);
+    } catch(e) {
+      const treks = await getTreks();
+      return treks.find(t => t.id === id || t.slug === id) || null;
+    }
   }
 
   async function createTrek(trek) {
@@ -301,11 +324,30 @@
 
   // === TRIPS CRUD ===
   async function getTrips() {
-    return await apiRequest('/trips');
+    try {
+      const res = await apiRequest('/trips');
+      if (Array.isArray(res) && res.length > 0) return res;
+      if (Array.isArray(res)) return res;
+    } catch (e) {
+      console.warn('API getTrips failed, fallback to static /data/trips.json:', e.message);
+    }
+    try {
+      const dataPath = window.location.pathname.includes('/frontend/') || window.location.pathname.includes('/admin/') ? '../data/trips.json' : 'data/trips.json';
+      const res = await fetch(`${dataPath}?t=${Date.now()}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch(e) {}
+    return [];
   }
 
   async function getTripById(id) {
-    return await apiRequest(`/trips/${encodeURIComponent(id)}`);
+    try {
+      return await apiRequest(`/trips/${encodeURIComponent(id)}`);
+    } catch(e) {
+      const trips = await getTrips();
+      return trips.find(t => t.id === id || t.slug === id) || null;
+    }
   }
 
   async function createTrip(trip) {
