@@ -7,6 +7,7 @@ const DATA_DIR = path.join(__dirname, '../../data');
 const STORE_FILE = path.join(DATA_DIR, 'store.json');
 const TREKS_FILE = path.join(DATA_DIR, 'treks.json');
 const TRIPS_FILE = path.join(DATA_DIR, 'trips.json');
+const MEMORIES_FILE = path.join(DATA_DIR, 'memories.json');
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -125,6 +126,11 @@ function readLocalStore() {
       const rawTrips = fs.readFileSync(TRIPS_FILE, 'utf8');
       store.trips = JSON.parse(rawTrips);
     }
+
+    if (fs.existsSync(MEMORIES_FILE)) {
+      const rawMemories = fs.readFileSync(MEMORIES_FILE, 'utf8');
+      store.memories = JSON.parse(rawMemories);
+    }
   } catch (e) {
     console.error('Error reading local store:', e);
   }
@@ -152,6 +158,7 @@ function writeLocalStore(store) {
     safeWriteJsonSync(STORE_FILE, store);
     if (store.treks) safeWriteJsonSync(TREKS_FILE, store.treks);
     if (store.trips) safeWriteJsonSync(TRIPS_FILE, store.trips);
+    if (store.memories) safeWriteJsonSync(MEMORIES_FILE, store.memories);
   } catch (e) {
     console.error('Error writing local store:', e);
   }

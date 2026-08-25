@@ -1,4 +1,4 @@
-// memories-admin.js - Admin manager for Memories Gallery with safe draft state & modal confirmation
+// memories-admin.js - Admin manager for Memories Gallery with safe server file upload & draft state
 (function(){
   'use strict';
 
@@ -21,7 +21,15 @@
     const removeAllBtn = document.getElementById('removeAllBtn');
     const confirmSaveBtn = document.getElementById('confirmSaveBtn');
     const saveModalEl = document.getElementById('saveMemoriesModal');
-    let saveModal = saveModalEl ? new bootstrap.Modal(saveModalEl) : null;
+    let saveModal = null;
+    
+    if (saveModalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      try {
+        saveModal = new bootstrap.Modal(saveModalEl);
+      } catch(e) {
+        console.warn('Bootstrap modal init warning:', e);
+      }
+    }
 
     // Load Categories & Initial Memories
     try {
@@ -32,7 +40,11 @@
     await loadMemories();
 
     async function loadMemories(){
-      publishedMemories = await DataAPI.getMemories();
+      try {
+        publishedMemories = await DataAPI.getMemories();
+      } catch(e) {
+        publishedMemories = [];
+      }
       workingMemories = JSON.parse(JSON.stringify(publishedMemories));
       hasUnsavedChanges = false;
       updateDraftStatus();
@@ -45,7 +57,7 @@
       if(categoriesList && categoriesList.length > 0){
         html += categoriesList.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
       } else {
-        html += '<option value="Western Ghats">Western Ghats</option><option value="Camping">Camping</option><option value="Road Trips">Road Trips</option>';
+        html += '<option value="Western Ghats">Western Ghats</option><option value="Camping">Camping</option><option value="Road Trips">Road Trips</option><option value="Weekend Trips">Weekend Trips</option>';
       }
       categoryFilter.innerHTML = html;
     }
@@ -102,7 +114,7 @@
       grid.innerHTML = items.map((mem, index) => {
         const catSelectHTML = `
           <select class="form-select form-select-sm cat-select mt-1" data-id="${mem.id}" style="font-size: 0.75rem;">
-            <option value="All" ${mem.category === 'All' ? 'selected' : ''}>General / All</option>
+            <option value="General" ${!mem.category || mem.category === 'General' || mem.category === 'All' ? 'selected' : ''}>General / All</option>
             ${categoriesList.map(c => `<option value="${c.name}" ${mem.category === c.name ? 'selected' : ''}>${c.name}</option>`).join('')}
           </select>
         `;
@@ -189,7 +201,7 @@
       });
     }
 
-    // Multi File Upload Handler with Auto Canvas Compression
+    // Multi File Upload Handler with Direct Server File Upload
     if(triggerBtn && fileInput){
       triggerBtn.addEventListener('click', () => fileInput.click());
 
@@ -198,22 +210,28 @@
         if(files.length === 0) return;
 
         triggerBtn.disabled = true;
-        triggerBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Processing ${files.length} photos...`;
 
         for(let i = 0; i < files.length; i++){
+          const file = files[i];
+          triggerBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Uploading ${i + 1}/${files.length}...`;
+          
+          let imgUrl = '';
           try {
-            const dataUrl = await fileToDataURL(files[i]);
-            workingMemories.unshift({
-              id: 'mem-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
-              image: dataUrl,
-              category: categoryFilter ? (categoryFilter.value !== 'All' ? categoryFilter.value : 'Western Ghats') : 'Western Ghats',
-              order: workingMemories.length + 1,
-              created_at: Date.now() + i,
-              published: true
-            });
-          } catch(e){
-            console.error('File conversion error', e);
+            const res = await DataAPI.uploadFile(file);
+            imgUrl = res.url || res.fullUrl;
+          } catch(e) {
+            console.warn('Upload API fallback to compressed dataURL:', e);
+            imgUrl = await fileToDataURL(file);
           }
+
+          workingMemories.unshift({
+            id: 'mem-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+            image: imgUrl,
+            category: categoryFilter ? (categoryFilter.value !== 'All' ? categoryFilter.value : 'Western Ghats') : 'Western Ghats',
+            order: workingMemories.length + 1,
+            created_at: Date.now() + i,
+            published: true
+          });
         }
 
         workingMemories.forEach((m, i) => m.order = i + 1);
@@ -226,8 +244,8 @@
       });
     }
 
-    // Lightweight Canvas Auto-Compressor (800px max, 0.72 quality ~35KB per image)
-    function fileToDataURL(file, maxWidth = 800, maxHeight = 800, quality = 0.72){
+    // Fallback Canvas Compressor if upload API unavailable
+    function fileToDataURL(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8){
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -277,38 +295,50 @@
       });
     }
 
-    // Save Memories Confirmation Modal Handler
-    if(saveBtn){
-      saveBtn.addEventListener('click', () => {
-        if(saveModal) saveModal.show();
-      });
-    }
-
-    if(confirmSaveBtn){
-      confirmSaveBtn.addEventListener('click', async function(){
+    // Save Memories Direct / Modal Handler
+    async function saveAllMemories(){
+      if(saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+      }
+      if(confirmSaveBtn){
         confirmSaveBtn.disabled = true;
-        confirmSaveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Publishing...';
+        confirmSaveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+      }
 
-        try {
-          publishedMemories = await DataAPI.updateMemories(workingMemories);
-          hasUnsavedChanges = false;
-          updateDraftStatus();
-          if(saveModal) saveModal.hide();
-          alert('Memories Gallery updated and published successfully!');
-        } catch(err) {
-          alert('Failed to save memories: ' + err.message);
-        } finally {
+      try {
+        publishedMemories = await DataAPI.updateMemories(workingMemories);
+        hasUnsavedChanges = false;
+        updateDraftStatus();
+        if(saveModal) saveModal.hide();
+        alert('Memories Gallery updated and published successfully!');
+      } catch(err) {
+        console.error('Save Memories Error:', err);
+        alert('Failed to save memories: ' + (err.message || 'Server error'));
+      } finally {
+        if(saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> SAVE MEMORIES';
+        }
+        if(confirmSaveBtn){
           confirmSaveBtn.disabled = false;
           confirmSaveBtn.innerHTML = 'SAVE CHANGES';
+        }
+      }
+    }
+
+    if(saveBtn){
+      saveBtn.addEventListener('click', () => {
+        if(saveModal) {
+          saveModal.show();
+        } else {
+          saveAllMemories();
         }
       });
     }
 
-    // Toggle sidebar on mobile
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.getElementById('sidebar');
-    if(toggleBtn && sidebar){
-      toggleBtn.addEventListener('click', () => sidebar.classList.toggle('show'));
+    if(confirmSaveBtn){
+      confirmSaveBtn.addEventListener('click', saveAllMemories);
     }
 
   });

@@ -136,6 +136,17 @@
     }
   };
 
+  const DEFAULT_MEMORIES = [
+    { id: "mem-1", image: "../images/treks/kudremukha/cover.jpg", category: "Western Ghats", order: 1, created_at: 1770000000000, published: true },
+    { id: "mem-2", image: "../images/hero/scroll-back.jpg", category: "Highland Trails", order: 2, created_at: 1770000100000, published: true },
+    { id: "mem-3", image: "../images/trips/roadtrip-card.jpg", category: "Road Trips", order: 3, created_at: 1770000200000, published: true },
+    { id: "mem-4", image: "../images/intro/intro.jpg", category: "Camping", order: 4, created_at: 1770000300000, published: true },
+    { id: "mem-5", image: "../images/trips/gokarna/cover.jpg", category: "Weekend Getaways", order: 5, created_at: 1770000400000, published: true },
+    { id: "mem-6", image: "../images/trips/camping/cover.jpg", category: "Camping", order: 6, created_at: 1770000500000, published: true },
+    { id: "mem-7", image: "../images/trips/roadtrip/cover.jpg", category: "Road Trips", order: 7, created_at: 1770000600000, published: true },
+    { id: "mem-8", image: "../images/treks/netravathi/cover.jpg", category: "Western Ghats", order: 8, created_at: 1770000700000, published: true }
+  ];
+
   async function loadInitial() {
     try {
       const [treks, trips] = await Promise.all([
@@ -378,7 +389,21 @@
 
   // === MEMORIES CRUD ===
   async function getMemories() {
-    return await apiRequest('/memories');
+    try {
+      const res = await apiRequest('/memories');
+      if (Array.isArray(res) && res.length > 0) return res;
+      if (Array.isArray(res)) return res;
+    } catch(e) {
+      console.warn('API getMemories failed, fallback to static /data/memories.json:', e.message);
+    }
+    try {
+      const dataPath = window.location.pathname.includes('/frontend/') || window.location.pathname.includes('/admin/') ? '../data/memories.json' : 'data/memories.json';
+      const res = await fetch(`${dataPath}?t=${Date.now()}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch(e) {}
+    return DEFAULT_MEMORIES;
   }
 
   async function updateMemories(memoriesList) {
