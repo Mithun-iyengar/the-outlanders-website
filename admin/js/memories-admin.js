@@ -314,7 +314,11 @@
         alert('Memories Gallery updated and published successfully!');
       } catch(err) {
         console.error('Save Memories Error:', err);
-        alert('Failed to save memories: ' + (err.message || 'Server error'));
+        let msg = err.message || 'Server error';
+        if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ECONNREFUSED')) {
+          msg = 'Cannot connect to backend CMS server. Please run "npm start" in your terminal to start the backend server.';
+        }
+        alert('Failed to save memories: ' + msg);
       } finally {
         if(saveBtn) {
           saveBtn.disabled = false;
