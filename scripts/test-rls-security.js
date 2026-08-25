@@ -2,7 +2,7 @@
 const { supabase } = require('../server/config/supabaseClient');
 
 async function testRLSSecurity() {
-  console.log('🔒 Testing Row Level Security (RLS) Policies on Supabase...');
+  console.log('🔒 Testing Row Level Security (RLS) Policies on Supabase...\n');
 
   if (!supabase) {
     console.error('❌ Supabase client not initialized.');
@@ -19,8 +19,11 @@ async function testRLSSecurity() {
       if (res.error) {
         console.log(`✅ [PASS] ${description}: Blocked as expected (${res.error.message})`);
         passedTests++;
+      } else if (!res.data || (Array.isArray(res.data) && res.data.length === 0)) {
+        console.log(`✅ [PASS] ${description}: Blocked by RLS (0 rows returned/affected).`);
+        passedTests++;
       } else {
-        console.error(`❌ [FAIL] ${description}: Operation was NOT blocked! Data:`, res.data);
+        console.error(`❌ [FAIL] ${description}: Operation was NOT blocked! Returned data:`, res.data);
       }
     } catch (err) {
       console.log(`✅ [PASS] ${description}: Exception thrown (${err.message})`);
@@ -47,6 +50,11 @@ async function testRLSSecurity() {
   await assertBlocked(
     'Anonymous SELECT on admin_users table (protect password_hash)',
     supabase.from('admin_users').select('*')
+  );
+
+  await assertBlocked(
+    'Anonymous INSERT into admin_users table',
+    supabase.from('admin_users').insert([{ id: 'hack-user', username: 'hacker', password_hash: '123456' }])
   );
 
   // 2. Test Public Read Operations
@@ -83,12 +91,12 @@ async function testRLSSecurity() {
 
   await assertBlocked(
     'Public UPDATE on treks table',
-    supabase.from('treks').update({ price: 0 }).eq('id', 'trek-1')
+    supabase.from('treks').update({ price: 0 }).eq('id', 'trek-1').select()
   );
 
   await assertBlocked(
     'Public DELETE on treks table',
-    supabase.from('treks').delete().eq('id', 'trek-1')
+    supabase.from('treks').delete().eq('id', 'trek-1').select()
   );
 
   await assertBlocked(
