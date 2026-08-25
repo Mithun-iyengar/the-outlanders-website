@@ -96,12 +96,14 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start Server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 The Outlanders Production CMS Server running on http://localhost:${PORT}`);
-  console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
-  console.log(`🌐 Public Website: http://localhost:${PORT}/frontend/index.html`);
-  console.log(`🔐 Admin Panel: http://localhost:${PORT}/admin/index.html`);
-});
+// Start Server (only when executed directly, not on Vercel serverless)
+if (!process.env.VERCEL && require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 The Outlanders Production CMS Server running on http://localhost:${PORT}`);
+    console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
+    console.log(`🌐 Public Website: http://localhost:${PORT}/frontend/index.html`);
+    console.log(`🔐 Admin Panel: http://localhost:${PORT}/admin/index.html`);
+  });
+}
 
 module.exports = app;

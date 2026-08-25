@@ -2,6 +2,18 @@
 (function(){
   'use strict';
 
+  // Environment-aware API Base URL resolution
+  const API_BASE = (function(){
+    if (typeof window !== 'undefined' && window.location) {
+      const port = window.location.port;
+      if (port === '8000') {
+        return 'http://localhost:5000/api';
+      }
+      return window.location.origin + '/api';
+    }
+    return '/api';
+  })();
+
   function getAuthToken(){
     try {
       const token = sessionStorage.getItem('outlanders_auth_token') || localStorage.getItem('outlanders_auth_token');
@@ -23,43 +35,62 @@
   }
 
   async function loginAdmin(username, password){
-    const apiBase = window.location.port === '8000' ? 'http://localhost:5000/api' : '/api';
-    const res = await fetch(`${apiBase}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-    const data = await res.json();
-    if(!res.ok || !data.success){
-      throw new Error(data.error || 'Invalid credentials');
-    }
+      const contentType = res.headers.get('content-type') || '';
+      let data = {};
+      if (contentType.includes('application/json')) {
+        try { data = await res.json(); } catch(e){}
+      }
 
-    if(data.token){
-      sessionStorage.setItem('outlanders_auth_token', data.token);
-      localStorage.setItem('outlanders_auth_token', data.token);
-      sessionStorage.setItem('outlanders_admin_logged', '1');
+      if (!res.ok || !data.success) {
+        const errorMsg = data.error || (res.status >= 500 ? 'Unable to connect to the server. Please try again later.' : `Login failed (${res.status})`);
+        throw new Error(errorMsg);
+      }
+
+      if (data.token) {
+        sessionStorage.setItem('outlanders_auth_token', data.token);
+        localStorage.setItem('outlanders_auth_token', data.token);
+        sessionStorage.setItem('outlanders_admin_logged', '1');
+      }
+      return data;
+    } catch (err) {
+      console.warn('Admin Login API Error:', err.message);
+      throw err;
     }
-    return data;
   }
 
   async function changeAdminPassword(currentPassword, newPassword){
-    const apiBase = window.location.port === '8000' ? 'http://localhost:5000/api' : '/api';
-    const token = getAuthToken();
-    const res = await fetch(`${apiBase}/auth/change-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ currentPassword, newPassword })
-    });
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE}/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
 
-    const data = await res.json();
-    if(!res.ok){
-      throw new Error(data.error || 'Failed to change password');
+      const contentType = res.headers.get('content-type') || '';
+      let data = {};
+      if (contentType.includes('application/json')) {
+        try { data = await res.json(); } catch(e){}
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to change password');
+      }
+      return data;
+    } catch (err) {
+      console.warn('Change Password Error:', err.message);
+      throw err;
     }
-    return data;
   }
 
   document.addEventListener('DOMContentLoaded', ()=>{
