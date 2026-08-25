@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trek Details — The Outlanders</title>
+  <meta name="description" content="View trek itinerary, inclusions, schedule, and book your adventure with The Outlanders." />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="icon" href="../images/logo/outlanders-logo.png">
+  <link rel="stylesheet" href="css/style.css?v=20260825-v13">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav id="mainNav" class="navbar navbar-expand-lg navbar-dark" role="navigation">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <span class="logo-wrap"><img src="../images/logo/outlanders-logo.png" alt="THE OUTLANDERS" class="logo-img"></span>
+        <span class="brand-text"><span class="brand-title">THE OUTLANDERS</span></span>
+      </a>
+      <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="treks.html">Treks</a></li>
+          <li class="nav-item"><a class="nav-link" href="trips.html">Trips</a></li>
+          <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+        </ul>
+        <div class="d-flex align-items-center social-icons ms-auto">
+          <a href="https://www.instagram.com/trek_with_theoutlanders/" class="text-light me-3" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="https://wa.me/917795167667" class="text-light" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="py-5">
+    <div class="container">
+      <a href="treks.html" class="link-underline mb-4 d-inline-block"><i class="bi bi-arrow-left me-1"></i> BACK TO ALL TREKS</a>
+      
+      <div id="trek-detail" class="row g-4">
+        <!-- Trek details & booking card rendered dynamically by treks.js -->
+      </div>
+    </div>
+
+    <!-- Mobile Sticky Booking Bar -->
+    <div id="mobile-booking-bar" class="mobile-booking-bar" aria-label="Mobile booking bar">
+      <!-- Populated dynamically by treks.js on mobile view -->
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="py-4 text-light">
+    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+      <div class="d-flex flex-wrap gap-4">
+        <a href="https://wa.me/917795167667" target="_blank" rel="noopener noreferrer" class="text-light"><i class="bi bi-whatsapp text-success me-1"></i> WhatsApp</a>
+        <a href="tel:+917795167667" class="text-light"><i class="bi bi-telephone me-1" style="color: var(--accent);"></i> Call Us</a>
+        <a href="https://www.instagram.com/trek_with_theoutlanders/" target="_blank" rel="noopener noreferrer" class="text-light"><i class="bi bi-instagram text-danger me-1"></i> @trek_with_theoutlanders</a>
+      </div>
+      <div class="small" style="color: var(--muted);">© 2026 The Outlanders. All Rights Reserved.</div>
+    </div>
+  </footer>
+
+  <!-- Floating WhatsApp Button -->
+  <button class="floating-whatsapp" data-bs-toggle="tooltip" data-bs-placement="left" title="Chat with The Outlanders" onclick="openWhatsAppChat()" aria-label="Chat on WhatsApp">
+    <i class="bi bi-whatsapp"></i>
+  </button>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/data-api.js" defer></script>
+  <script src="js/app.js?v=20260825-upgrade2" defer></script>
+  <script src="js/treks.js?v=20260825-upgrade2" defer></script>
+  <script src="js/whatsapp.js?v=20260825-upgrade2" defer></script>
+</body>
+</html>

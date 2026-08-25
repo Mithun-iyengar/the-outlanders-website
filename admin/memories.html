@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Memories Gallery Manager — Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="css/admin.css?v=20260825-v14" rel="stylesheet">
+  <style>
+    .memory-thumb-card {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+    }
+    .memory-thumb-card:hover {
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    .memory-thumb-img-wrapper {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+      background: #0F172A;
+      position: relative;
+    }
+    .memory-thumb-img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .memory-thumb-actions {
+      padding: 0.6rem 0.75rem;
+      background: #F8FAFC;
+      border-top: 1px solid #E2E8F0;
+    }
+    .draft-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .draft-badge.has-changes {
+      background: #FEF3C7;
+      color: #92400E;
+      border: 1px solid #FCD34D;
+    }
+    .draft-badge.synced {
+      background: #D1FAE5;
+      color: #065F46;
+      border: 1px solid #6EE7B7;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <!-- Mobile Navbar -->
+  <nav class="navbar navbar-dark bg-dark d-lg-none sticky-top px-3">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.html">
+      <img src="../images/logo/outlanders-logo.png" alt="Outlanders Logo" style="height: 36px;">
+      <span class="fw-bold fs-6">MEMORIES MANAGER</span>
+    </a>
+    <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminOffcanvas">
+      <i class="bi bi-list fs-5"></i>
+    </button>
+  </nav>
+
+  <!-- Mobile Offcanvas -->
+  <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="adminOffcanvas">
+    <div class="offcanvas-header border-bottom border-secondary">
+      <div class="d-flex align-items-center gap-2">
+        <img src="../images/logo/outlanders-logo.png" alt="Outlanders Logo" style="height: 40px;">
+        <h5 class="offcanvas-title fw-bold text-white mb-0">THE OUTLANDERS</h5>
+      </div>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+      <ul class="nav flex-column gap-1">
+        <li class="nav-item"><a href="dashboard.html" class="nav-link text-white"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
+        <li class="nav-item"><a href="homepage.html" class="nav-link text-white"><i class="bi bi-house-door me-2"></i> Homepage Manager</a></li>
+        <li class="nav-item"><a href="treks.html" class="nav-link text-white"><i class="bi bi-person-walking me-2"></i> Treks Manager</a></li>
+        <li class="nav-item"><a href="trips.html" class="nav-link text-white"><i class="bi bi-map me-2"></i> Trips Manager</a></li>
+        <li class="nav-item"><a href="categories.html" class="nav-link text-white"><i class="bi bi-grid-3x3-gap me-2"></i> Categories Manager</a></li>
+        <li class="nav-item"><a href="memories.html" class="nav-link text-white active bg-secondary bg-opacity-25 rounded fw-bold"><i class="bi bi-images me-2"></i> Memories Gallery</a></li>
+        <li class="nav-item"><a href="media.html" class="nav-link text-white"><i class="bi bi-folder me-2"></i> Media Library</a></li>
+        <li class="nav-item"><a href="about.html" class="nav-link text-white"><i class="bi bi-info-circle me-2"></i> About Us Editor</a></li>
+        <li class="nav-item"><a href="settings.html" class="nav-link text-white"><i class="bi bi-gear me-2"></i> Settings & Social</a></li>
+        <li class="nav-item mt-4"><a href="#" id="mobileLogout" class="nav-link text-warning"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="admin-shell d-flex">
+    <!-- Sidebar -->
+    <nav class="sidebar bg-dark text-white p-3 d-none d-lg-block" style="width: 260px; min-height: 100vh;">
+      <div class="mb-4 text-center pb-3 border-bottom border-secondary border-opacity-50">
+        <img src="../images/logo/outlanders-logo.png" alt="The Outlanders" class="admin-logo" style="max-height: 48px; width: auto;">
+        <div class="small text-muted font-monospace mt-1">Memories Management</div>
+      </div>
+      <ul class="nav flex-column gap-1">
+        <li class="nav-item"><a href="dashboard.html" class="nav-link text-white"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
+        <li class="nav-item"><a href="homepage.html" class="nav-link text-white"><i class="bi bi-house-door me-2"></i> Homepage Manager</a></li>
+        <li class="nav-item"><a href="treks.html" class="nav-link text-white"><i class="bi bi-person-walking me-2"></i> Treks Manager</a></li>
+        <li class="nav-item"><a href="trips.html" class="nav-link text-white"><i class="bi bi-map me-2"></i> Trips Manager</a></li>
+        <li class="nav-item"><a href="categories.html" class="nav-link text-white"><i class="bi bi-grid-3x3-gap me-2"></i> Categories Manager</a></li>
+        <li class="nav-item"><a href="memories.html" class="nav-link text-white active rounded fw-bold"><i class="bi bi-images me-2"></i> Memories Gallery</a></li>
+        <li class="nav-item"><a href="media.html" class="nav-link text-white"><i class="bi bi-folder me-2"></i> Media Library</a></li>
+        <li class="nav-item"><a href="about.html" class="nav-link text-white"><i class="bi bi-info-circle me-2"></i> About Us Editor</a></li>
+        <li class="nav-item"><a href="settings.html" class="nav-link text-white"><i class="bi bi-gear me-2"></i> Settings & Social</a></li>
+        <li class="nav-item mt-4 pt-3 border-top border-secondary border-opacity-25"><a href="#" id="logoutLink" class="nav-link text-warning"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="p-4 flex-grow-1">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+          <h3 class="fw-bold mb-0" style="color: #17212B;">MEMORIES GALLERY MANAGER</h3>
+          <p class="text-muted small mb-0">Upload, manage, tag, reorder, and publish photos to the public website Memories Photo Wall.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <div id="draftStatusBadge" class="draft-badge synced">
+            <i class="bi bi-check-circle-fill"></i> ALL CHANGES PUBLISHED
+          </div>
+          <button class="btn btn-success btn-sm fw-bold px-3 py-2" id="saveMemoriesBtn">
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i> SAVE MEMORIES
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Card -->
+      <div class="card p-3 shadow-sm border-0 mb-4" style="background: #FFFFFF;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-dark fs-6 px-3 py-2 font-monospace" id="totalCountBadge">Total Memories: 0</span>
+            <div class="input-group input-group-sm" style="max-width: 220px;">
+              <span class="input-group-text bg-light text-muted"><i class="bi bi-funnel"></i></span>
+              <select class="form-select" id="categoryFilter">
+                <option value="All">All Categories</option>
+              </select>
+            </div>
+            <div class="input-group input-group-sm" style="max-width: 240px;">
+              <span class="input-group-text bg-light text-muted"><i class="bi bi-sort-down"></i></span>
+              <select class="form-select" id="sortOrderSelect">
+                <option value="custom">Custom Order / Admin Sequence</option>
+                <option value="newest">Newest Uploads First</option>
+                <option value="oldest">Oldest Uploads First</option>
+              </select>
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm fw-bold px-3 py-2" id="triggerMultiUploadBtn">
+              <i class="bi bi-plus-lg me-1"></i> UPLOAD MEMORIES
+            </button>
+            <input type="file" id="multiFileInput" multiple accept="image/*" class="d-none">
+            <button class="btn btn-sm btn-outline-danger" id="removeAllBtn">
+              <i class="bi bi-trash me-1"></i> Delete All
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Memories Grid -->
+      <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="memoriesGrid">
+        <!-- Dynamically populated cards -->
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Save Confirmation Modal -->
+  <div class="modal fade" id="saveMemoriesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title fw-bold"><i class="bi bi-cloud-arrow-up-fill text-warning me-2"></i>Save Memories Gallery?</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="fs-6 text-secondary mb-0">
+            Your gallery changes will be published to the website. Do you want to continue?
+          </p>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary fw-bold px-4" data-bs-dismiss="modal">CANCEL</button>
+          <button type="button" class="btn btn-primary fw-bold px-4" id="confirmSaveBtn">SAVE CHANGES</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../frontend/js/data-api.js?v=20260825-v14"></script>
+  <script src="js/auth-check.js"></script>
+  <script src="js/memories-admin.js?v=20260825-v14"></script>
+</body>
+</html>

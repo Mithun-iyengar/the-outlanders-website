@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Treks — The Outlanders</title>
+  <meta name="description" content="Browse upcoming treks, weekend getaways, and adventure trails in the Western Ghats with The Outlanders." />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="icon" href="../images/logo/outlanders-logo.png">
+  <link rel="stylesheet" href="css/style.css?v=20260825-v13">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav id="mainNav" class="navbar navbar-expand-lg navbar-dark" role="navigation">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <span class="logo-wrap"><img src="../images/logo/outlanders-logo.png" alt="THE OUTLANDERS" class="logo-img"></span>
+        <span class="brand-text"><span class="brand-title">THE OUTLANDERS</span></span>
+      </a>
+      <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="treks.html">Treks</a></li>
+          <li class="nav-item"><a class="nav-link" href="trips.html">Trips</a></li>
+          <li class="nav-item"><a class="nav-link" href="memories.html">Memories</a></li>
+          <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+        </ul>
+        <div class="d-flex align-items-center social-icons ms-auto">
+          <a href="https://www.instagram.com/trek_with_theoutlanders/" class="text-light me-3" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="https://wa.me/917795167667" class="text-light" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="py-5">
+    <div class="container">
+      <!-- Header Banner -->
+      <div class="reveal reveal-up mb-4">
+        <span class="category-kicker mb-1">UNFORGETTABLE TRAILS</span>
+        <h1 class="display-5 fw-bold text-white mb-2">EXPLORE UPCOMING TREKS</h1>
+        <p style="color: var(--text-main); max-width: 600px;">Filter through our upcoming handpicked trekking experiences across the Western Ghats.</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="reveal reveal-up p-3 mb-4 rounded-3 border" style="background: var(--surface); border-color: var(--card-border) !important;">
+        <div class="row g-3 align-items-center">
+          <div class="col-12 col-md-3">
+            <label for="filter-category" class="form-label small mb-1" style="color: var(--muted);">Category</label>
+            <select id="filter-category" class="form-select text-light border-secondary border-opacity-50" style="background: #080B0A;" aria-label="Category filter">
+              <option value="All">All Categories</option>
+              <option value="Western Ghats">Western Ghats</option>
+              <option value="Weekend">Weekend Trips</option>
+              <option value="Camping">Camping</option>
+              <option value="Trek">Trek</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-3">
+            <label for="filter-difficulty" class="form-label small mb-1" style="color: var(--muted);">Difficulty</label>
+            <select id="filter-difficulty" class="form-select text-light border-secondary border-opacity-50" style="background: #080B0A;" aria-label="Difficulty filter">
+              <option value="All">All Difficulties</option>
+              <option value="Easy">Easy</option>
+              <option value="Moderate">Moderate</option>
+              <option value="Challenging">Challenging</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-3">
+            <label for="filter-duration" class="form-label small mb-1" style="color: var(--muted);">Duration</label>
+            <select id="filter-duration" class="form-select text-light border-secondary border-opacity-50" style="background: #080B0A;" aria-label="Duration filter">
+              <option value="All">All Durations</option>
+              <option value="1 Day">1 Day</option>
+              <option value="2 Days">2 Days / Weekend</option>
+              <option value="Multi-Day">Multi-Day</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-3">
+            <label for="searchBox" class="form-label small mb-1" style="color: var(--muted);">Search</label>
+            <div class="input-group">
+              <span class="input-group-text text-muted border-secondary border-opacity-50" style="background: #080B0A;"><i class="bi bi-search"></i></span>
+              <input id="searchBox" class="form-control text-light border-secondary border-opacity-50" style="background: #080B0A;" placeholder="Search destination..." aria-label="Search destinations">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trek Grid -->
+      <div id="trek-list" class="row g-4">
+        <!-- Trek cards injected by treks.js / filters.js -->
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="py-4 text-light">
+    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+      <div class="d-flex flex-wrap gap-4">
+        <a href="https://wa.me/917795167667" target="_blank" rel="noopener noreferrer" class="text-light"><i class="bi bi-whatsapp text-success me-1"></i> WhatsApp</a>
+        <a href="tel:+917795167667" class="text-light"><i class="bi bi-telephone me-1" style="color: var(--accent);"></i> Call Us</a>
+        <a href="https://www.instagram.com/trek_with_theoutlanders/" target="_blank" rel="noopener noreferrer" class="text-light"><i class="bi bi-instagram text-danger me-1"></i> @trek_with_theoutlanders</a>
+      </div>
+      <div class="small" style="color: var(--muted);">© 2026 The Outlanders. All Rights Reserved.</div>
+    </div>
+  </footer>
+
+  <!-- Floating WhatsApp -->
+  <button class="floating-whatsapp" data-bs-toggle="tooltip" data-bs-placement="left" title="Chat with The Outlanders" onclick="openWhatsAppChat()" aria-label="Chat on WhatsApp">
+    <i class="bi bi-whatsapp"></i>
+  </button>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/data-api.js" defer></script>
+  <script src="js/app.js?v=20260825-upgrade2" defer></script>
+  <script src="js/treks.js?v=20260825-upgrade2" defer></script>
+  <script src="js/filters.js?v=20260825-upgrade2" defer></script>
+  <script src="js/whatsapp.js?v=20260825-upgrade2" defer></script>
+</body>
+</html>
