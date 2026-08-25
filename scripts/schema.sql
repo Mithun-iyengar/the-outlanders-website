@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS trips (
   image TEXT,
   cover_image TEXT,
   description TEXT,
+  short_description TEXT,
+  itinerary TEXT,
   published BOOLEAN DEFAULT true,
   created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000),
   updated_at BIGINT DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)

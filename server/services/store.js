@@ -8,7 +8,6 @@ const STORE_FILE = path.join(DATA_DIR, 'store.json');
 const TREKS_FILE = path.join(DATA_DIR, 'treks.json');
 const TRIPS_FILE = path.join(DATA_DIR, 'trips.json');
 
-// Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
@@ -162,9 +161,11 @@ async function getTreks() {
         coverImage: row.cover_image,
         featuredImage: row.featured_image,
         shortDescription: row.short_description,
+        description: row.short_description,
         featured: row.featured,
         published: row.published,
         itinerary: row.itinerary,
+        inclusions: row.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
         created_at: Number(row.created_at),
         updated_at: Number(row.updated_at)
       }));
@@ -198,10 +199,12 @@ async function saveTrek(trekData) {
     image: trekData.image || '',
     coverImage: trekData.coverImage || trekData.image || '',
     featuredImage: trekData.featuredImage || '',
-    shortDescription: trekData.shortDescription || '',
+    shortDescription: trekData.shortDescription || trekData.description || '',
+    description: trekData.description || trekData.shortDescription || '',
     featured: Boolean(trekData.featured),
     published: trekData.published !== false,
     itinerary: trekData.itinerary || '',
+    inclusions: trekData.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
     created_at: trekData.created_at || now,
     updated_at: now
   };
@@ -284,7 +287,10 @@ async function getTrips() {
         price: parseFloat(row.price),
         image: row.image,
         coverImage: row.cover_image,
-        description: row.description,
+        shortDescription: row.short_description || row.description,
+        description: row.description || row.short_description,
+        itinerary: row.itinerary || '',
+        inclusions: row.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
         published: row.published,
         created_at: Number(row.created_at),
         updated_at: Number(row.updated_at)
@@ -303,16 +309,21 @@ async function saveTrip(tripData) {
 
   const tripObj = {
     id: tripData.id || 'trip-' + now,
-    name: tripData.name || 'Untitled Trip',
+    name: tripData.name || tripData.title || 'Untitled Trip',
+    title: tripData.title || tripData.name || 'Untitled Trip',
     slug: tripData.slug || tripData.id || ('trip-' + now),
     category: tripData.category || 'Weekend Getaway',
     location: tripData.location || '',
     date: tripData.date || 'Every Friday Departure',
     duration: tripData.duration || '2 Days',
+    difficulty: tripData.difficulty || 'Easy',
     price: Number(tripData.price || 0),
-    image: tripData.image || '',
+    image: tripData.image || tripData.coverImage || '',
     coverImage: tripData.coverImage || tripData.image || '',
-    description: tripData.description || '',
+    shortDescription: tripData.shortDescription || tripData.description || '',
+    description: tripData.description || tripData.shortDescription || '',
+    itinerary: tripData.itinerary || '',
+    inclusions: tripData.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
     published: tripData.published !== false,
     created_at: tripData.created_at || now,
     updated_at: now
@@ -321,8 +332,8 @@ async function saveTrip(tripData) {
   if (db.isDbConnected()) {
     try {
       const queryText = `
-        INSERT INTO trips (id, name, slug, category, location, date, duration, price, image, cover_image, description, published, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        INSERT INTO trips (id, name, slug, category, location, date, duration, price, image, cover_image, description, short_description, itinerary, published, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,
           slug = EXCLUDED.slug,
@@ -334,13 +345,16 @@ async function saveTrip(tripData) {
           image = EXCLUDED.image,
           cover_image = EXCLUDED.cover_image,
           description = EXCLUDED.description,
+          short_description = EXCLUDED.short_description,
+          itinerary = EXCLUDED.itinerary,
           published = EXCLUDED.published,
           updated_at = EXCLUDED.updated_at
       `;
       await db.query(queryText, [
         tripObj.id, tripObj.name, tripObj.slug, tripObj.category, tripObj.location,
         tripObj.date, tripObj.duration, tripObj.price, tripObj.image,
-        tripObj.coverImage, tripObj.description, tripObj.published, tripObj.created_at, tripObj.updated_at
+        tripObj.coverImage, tripObj.description, tripObj.shortDescription, tripObj.itinerary,
+        tripObj.published, tripObj.created_at, tripObj.updated_at
       ]);
     } catch (e) {
       console.warn('DB saveTrip error:', e.message);
