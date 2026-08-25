@@ -1,6 +1,12 @@
 // trip-admin.js - list, add, edit, duplicate, delete trips using DataAPI with Duration, Category & Inclusions support
 (function(){
   'use strict';
+
+  function getVal(id, defaultVal = '') {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : defaultVal;
+  }
+
   document.addEventListener('DOMContentLoaded', async ()=>{
     if(window.requireLogin) requireLogin();
 
@@ -29,12 +35,12 @@
         try {
           const res = await DataAPI.uploadFile(coverInput.files[0]);
           if(res && (res.url || res.fullUrl)){
-            document.getElementById('coverImage').value = res.url || res.fullUrl;
+            if(document.getElementById('coverImage')) document.getElementById('coverImage').value = res.url || res.fullUrl;
           } else {
-            document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
+            if(document.getElementById('coverImage')) document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
           }
         } catch(e) {
-          document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
+          if(document.getElementById('coverImage')) document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
         }
       }
 
@@ -43,12 +49,12 @@
         try {
           const res = await DataAPI.uploadFile(itineraryInput.files[0]);
           if(res && (res.url || res.fullUrl)){
-            document.getElementById('itinerary').value = res.url || res.fullUrl;
+            if(document.getElementById('itinerary')) document.getElementById('itinerary').value = res.url || res.fullUrl;
           } else {
-            document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
+            if(document.getElementById('itinerary')) document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
           }
         } catch(e) {
-          document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
+          if(document.getElementById('itinerary')) document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
         }
       }
     }
@@ -63,21 +69,41 @@
     }
 
     async function saveTrip(){
-      const payload = readForm();
-      const titleVal = payload.name || payload.title;
-      if(!payload.id || !titleVal || !payload.date){
-        alert('Please fill required fields (Title, ID, Date)'); return;
-      }
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get('id');
-      if(id){ 
-        await DataAPI.updateTrip(id, payload); 
-        alert('Trip updated successfully!'); 
-        location.href='trips.html'; 
-      } else { 
-        await DataAPI.createTrip(payload); 
-        alert('Trip created successfully!'); 
-        location.href='trips.html'; 
+      const submitBtn = document.querySelector('#tripForm button[type="submit"]');
+      const origBtnHtml = submitBtn ? submitBtn.innerHTML : 'SAVE CHANGES';
+
+      try {
+        if(submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+        }
+
+        const payload = readForm();
+        const titleVal = payload.name || payload.title;
+        if(!payload.id || !titleVal){
+          alert('Please fill in required fields (Title and ID)');
+          return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        if(id){ 
+          await DataAPI.updateTrip(id, payload); 
+          alert('Trip updated successfully!'); 
+          location.href = 'trips.html'; 
+        } else { 
+          await DataAPI.createTrip(payload); 
+          alert('Trip created successfully!'); 
+          location.href = 'trips.html'; 
+        }
+      } catch(err) {
+        console.error('Save Trip Error:', err);
+        alert('Error saving trip: ' + (err.message || 'Server request failed'));
+      } finally {
+        if(submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnHtml;
+        }
       }
     }
 
@@ -241,7 +267,7 @@
           </div>
         </div>
 
-        <div class="mb-3"><label class="form-label">Short Description</label><textarea id="shortDescription" class="form-control" rows="3"></textarea></div>
+        <div class="mb-3"><label class="form-label fw-bold">Short Description</label><textarea id="shortDescription" class="form-control" rows="3" placeholder="Brief description of trip"></textarea></div>
       `;
       c.innerHTML = html;
 
@@ -314,18 +340,35 @@
     async function fillForm(id){
       const trip = await DataAPI.getTripById(id);
       if(!trip) return alert('Trip not found');
-      document.getElementById('id').value = trip.id || '';
-      document.getElementById('title').value = trip.name || trip.title || '';
-      document.getElementById('date').value = trip.date || 'Every Friday Departure';
-      document.getElementById('duration').value = trip.duration || '2 Days / 1 Night';
-      document.getElementById('location').value = trip.location || '';
-      document.getElementById('price').value = trip.price || '';
+      if(document.getElementById('id')) document.getElementById('id').value = trip.id || '';
+      if(document.getElementById('title')) document.getElementById('title').value = trip.name || trip.title || '';
+      if(document.getElementById('date')) document.getElementById('date').value = trip.date || 'Every Friday Departure';
+      if(document.getElementById('duration')) document.getElementById('duration').value = trip.duration || '2 Days / 1 Night';
+      if(document.getElementById('location')) document.getElementById('location').value = trip.location || '';
+      if(document.getElementById('price')) document.getElementById('price').value = trip.price || '';
       
       const catSelect = document.getElementById('category');
-      if(catSelect && trip.category) catSelect.value = trip.category;
+      if(catSelect && trip.category) {
+        const catMatch = Array.from(catSelect.options).find(o => o.value.toLowerCase() === trip.category.toLowerCase());
+        if(catMatch){
+          catSelect.value = catMatch.value;
+        } else {
+          const newOpt = new Option(trip.category, trip.category, true, true);
+          catSelect.add(newOpt);
+        }
+      }
 
       const diffSelect = document.getElementById('difficulty');
-      if(diffSelect) diffSelect.value = trip.difficulty || 'Easy';
+      if(diffSelect) {
+        const diffVal = trip.difficulty || 'Easy';
+        const diffMatch = Array.from(diffSelect.options).find(o => o.value.toLowerCase() === diffVal.toLowerCase());
+        if(diffMatch){
+          diffSelect.value = diffMatch.value;
+        } else {
+          const newOpt = new Option(diffVal, diffVal, true, true);
+          diffSelect.add(newOpt);
+        }
+      }
 
       const defaultInclusions = "Professional Guide & Lead\nMeals & Refreshments\nFirst Aid & Safety Gear\nPermits & Local Entry Fees";
       let incVal = trip.inclusions;
@@ -333,45 +376,46 @@
       if(document.getElementById('inclusions')) document.getElementById('inclusions').value = incVal || defaultInclusions;
 
       const imgVal = trip.coverImage || trip.image || '';
-      document.getElementById('coverImage').value = imgVal;
+      if(document.getElementById('coverImage')) document.getElementById('coverImage').value = imgVal;
       
       const coverPrev = document.getElementById('coverPreview');
       if(coverPrev) coverPrev.src = imgVal || '../images/trips/roadtrip-card.jpg';
 
       const itinVal = trip.itinerary || '';
-      document.getElementById('itinerary').value = itinVal;
+      if(document.getElementById('itinerary')) document.getElementById('itinerary').value = itinVal;
       const itinStatus = document.getElementById('itineraryStatus');
       if(itinStatus){
         itinStatus.textContent = itinVal ? (itinVal.split('/').pop().substring(0, 18) || 'Attached') : 'No PDF Attached';
         itinStatus.className = itinVal ? 'small fw-bold text-success text-truncate d-block mt-1' : 'small fw-bold text-muted text-truncate d-block mt-1';
       }
 
-      document.getElementById('shortDescription').value = trip.shortDescription || trip.description || '';
-      document.getElementById('published').value = trip.published !== false ? 'true' : 'false';
+      if(document.getElementById('shortDescription')) document.getElementById('shortDescription').value = trip.shortDescription || trip.description || '';
+      if(document.getElementById('published')) document.getElementById('published').value = trip.published !== false ? 'true' : 'false';
     }
 
     function readForm(){
-      const titleVal = document.getElementById('title').value.trim();
-      const rawInc = document.getElementById('inclusions') ? document.getElementById('inclusions').value : '';
-      const incList = rawInc.split('\n').map(s => s.trim()).filter(Boolean);
+      const titleVal = getVal('title') || getVal('name');
+      const rawInc = getVal('inclusions');
+      const incList = rawInc ? rawInc.split('\n').map(s => s.trim()).filter(Boolean) : [];
+      const idVal = getVal('id') || (titleVal ? titleVal.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '');
 
       return {
-        id: document.getElementById('id').value.trim(),
+        id: idVal,
         name: titleVal,
         title: titleVal,
-        category: document.getElementById('category') ? document.getElementById('category').value : 'Weekend Trips',
-        date: document.getElementById('date').value.trim() || 'Every Friday Departure',
-        duration: document.getElementById('duration') ? document.getElementById('duration').value.trim() : '2 Days / 1 Night',
-        location: document.getElementById('location').value.trim(),
-        price: Number(document.getElementById('price').value) || 0,
-        difficulty: document.getElementById('difficulty') ? document.getElementById('difficulty').value : 'Easy',
+        category: getVal('category', 'Weekend Trips'),
+        date: getVal('date', 'Every Friday Departure'),
+        duration: getVal('duration', '2 Days / 1 Night'),
+        location: getVal('location'),
+        price: Number(getVal('price')) || 0,
+        difficulty: getVal('difficulty', 'Easy'),
         inclusions: incList.length > 0 ? incList : ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
-        coverImage: document.getElementById('coverImage').value.trim(),
-        image: document.getElementById('coverImage').value.trim(),
-        itinerary: document.getElementById('itinerary').value.trim(),
-        shortDescription: document.getElementById('shortDescription').value.trim(),
-        description: document.getElementById('shortDescription').value.trim(),
-        published: document.getElementById('published').value === 'true'
+        coverImage: getVal('coverImage'),
+        image: getVal('coverImage'),
+        itinerary: getVal('itinerary'),
+        shortDescription: getVal('shortDescription'),
+        description: getVal('shortDescription'),
+        published: getVal('published', 'true') === 'true'
       };
     }
 

@@ -1,6 +1,12 @@
 // trek-admin.js - list, add, edit, duplicate, delete treks using DataAPI with Category & Inclusions support
 (function(){
   'use strict';
+
+  function getVal(id, defaultVal = '') {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : defaultVal;
+  }
+
   document.addEventListener('DOMContentLoaded', async ()=>{
     if(window.requireLogin) requireLogin();
 
@@ -24,14 +30,23 @@
     }
 
     async function saveTrek(){
-      const payload = readForm();
-      if(!payload.id || !payload.name || !payload.date || !payload.location || !payload.price){
-        alert('Please fill all required fields (Name, ID, Date, Location, Price)'); return;
-      }
+      const submitBtn = document.querySelector('#trekForm button[type="submit"]');
+      const origBtnHtml = submitBtn ? submitBtn.innerHTML : 'PUBLISH TREK';
 
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get('id');
       try {
+        if(submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+        }
+
+        const payload = readForm();
+        if(!payload.id || !payload.name || !payload.date || !payload.location){
+          alert('Please fill all required fields (Name, ID, Date, Location)');
+          return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
         if(id){
           await DataAPI.updateTrek(id, payload);
           alert('Trek updated successfully!');
@@ -42,7 +57,13 @@
           location.href = 'treks.html';
         }
       } catch(err){
-        alert('Error saving trek: ' + err.message);
+        console.error('Save Trek Error:', err);
+        alert('Error saving trek: ' + (err.message || 'Server request failed'));
+      } finally {
+        if(submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnHtml;
+        }
       }
     }
 
@@ -281,12 +302,12 @@
     async function fillForm(id){
       const trek = await DataAPI.getTrekById(id);
       if(!trek) return alert('Trek not found');
-      document.getElementById('id').value = trek.id || '';
-      document.getElementById('name').value = trek.name || '';
+      if(document.getElementById('id')) document.getElementById('id').value = trek.id || '';
+      if(document.getElementById('name')) document.getElementById('name').value = trek.name || '';
       if(document.getElementById('category')) document.getElementById('category').value = trek.category || 'Western Ghats';
-      document.getElementById('location').value = trek.location || '';
-      document.getElementById('date').value = trek.date || 'Every Friday Departure';
-      document.getElementById('duration').value = trek.duration || '';
+      if(document.getElementById('location')) document.getElementById('location').value = trek.location || '';
+      if(document.getElementById('date')) document.getElementById('date').value = trek.date || 'Every Friday Departure';
+      if(document.getElementById('duration')) document.getElementById('duration').value = trek.duration || '';
 
       if(document.getElementById('difficulty')) {
         const diffVal = trek.difficulty || 'Moderate';
@@ -305,19 +326,19 @@
       if(Array.isArray(incVal)) incVal = incVal.join('\n');
       if(document.getElementById('inclusions')) document.getElementById('inclusions').value = incVal || defaultInclusions;
 
-      document.getElementById('price').value = trek.price || '';
-      document.getElementById('availableSlots').value = trek.availableSlots || '';
-      document.getElementById('published').value = trek.published !== false ? 'true' : 'false';
-      document.getElementById('shortDescription').value = trek.shortDescription || '';
-      document.getElementById('description').value = trek.description || '';
+      if(document.getElementById('price')) document.getElementById('price').value = trek.price || '';
+      if(document.getElementById('availableSlots')) document.getElementById('availableSlots').value = trek.availableSlots || '';
+      if(document.getElementById('published')) document.getElementById('published').value = trek.published !== false ? 'true' : 'false';
+      if(document.getElementById('shortDescription')) document.getElementById('shortDescription').value = trek.shortDescription || '';
+      if(document.getElementById('description')) document.getElementById('description').value = trek.description || '';
 
       const coverVal = trek.coverImage || trek.image || '';
-      document.getElementById('coverImage').value = coverVal;
+      if(document.getElementById('coverImage')) document.getElementById('coverImage').value = coverVal;
       const coverPrev = document.getElementById('coverPreview');
       if(coverPrev) coverPrev.src = coverVal || '../images/treks/kudremukha/cover.jpg';
 
       const itinVal = trek.itinerary || '';
-      document.getElementById('itinerary').value = itinVal;
+      if(document.getElementById('itinerary')) document.getElementById('itinerary').value = itinVal;
       const itinStatus = document.getElementById('itineraryStatus');
       if(itinStatus){
         itinStatus.textContent = itinVal ? (itinVal.split('/').pop().substring(0, 18) || 'Attached') : 'No PDF Attached';
@@ -326,26 +347,28 @@
     }
 
     function readForm(){
-      const rawInc = document.getElementById('inclusions') ? document.getElementById('inclusions').value : '';
-      const incList = rawInc.split('\n').map(s => s.trim()).filter(Boolean);
+      const titleVal = getVal('name') || getVal('title');
+      const rawInc = getVal('inclusions');
+      const incList = rawInc ? rawInc.split('\n').map(s => s.trim()).filter(Boolean) : [];
+      const idVal = getVal('id') || (titleVal ? titleVal.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '');
 
       return {
-        id: document.getElementById('id').value.trim(),
-        name: document.getElementById('name').value.trim(),
-        category: document.getElementById('category').value.trim(),
-        location: document.getElementById('location').value.trim(),
-        date: document.getElementById('date').value.trim() || 'Every Friday Departure',
-        duration: document.getElementById('duration').value.trim(),
-        difficulty: document.getElementById('difficulty').value.trim(),
-        price: Number(document.getElementById('price').value) || 0,
-        availableSlots: Number(document.getElementById('availableSlots').value) || 0,
+        id: idVal,
+        name: titleVal,
+        category: getVal('category', 'Western Ghats'),
+        location: getVal('location'),
+        date: getVal('date', 'Every Friday Departure'),
+        duration: getVal('duration'),
+        difficulty: getVal('difficulty', 'Moderate'),
+        price: Number(getVal('price')) || 0,
+        availableSlots: Number(getVal('availableSlots')) || 0,
         inclusions: incList.length > 0 ? incList : ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
-        shortDescription: document.getElementById('shortDescription').value.trim(),
-        description: document.getElementById('description').value.trim(),
-        coverImage: document.getElementById('coverImage').value.trim(),
-        image: document.getElementById('coverImage').value.trim(),
-        itinerary: document.getElementById('itinerary').value.trim(),
-        published: document.getElementById('published').value === 'true'
+        shortDescription: getVal('shortDescription'),
+        description: getVal('description'),
+        coverImage: getVal('coverImage'),
+        image: getVal('coverImage'),
+        itinerary: getVal('itinerary'),
+        published: getVal('published', 'true') === 'true'
       };
     }
     
@@ -355,12 +378,12 @@
         try {
           const res = await DataAPI.uploadFile(coverInput.files[0]);
           if(res && (res.url || res.fullUrl)){
-            document.getElementById('coverImage').value = res.url || res.fullUrl;
+            if(document.getElementById('coverImage')) document.getElementById('coverImage').value = res.url || res.fullUrl;
           } else {
-            document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
+            if(document.getElementById('coverImage')) document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
           }
         } catch(e) {
-          document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
+          if(document.getElementById('coverImage')) document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
         }
       }
 
@@ -369,12 +392,12 @@
         try {
           const res = await DataAPI.uploadFile(itineraryInput.files[0]);
           if(res && (res.url || res.fullUrl)){
-            document.getElementById('itinerary').value = res.url || res.fullUrl;
+            if(document.getElementById('itinerary')) document.getElementById('itinerary').value = res.url || res.fullUrl;
           } else {
-            document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
+            if(document.getElementById('itinerary')) document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
           }
         } catch(e) {
-          document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
+          if(document.getElementById('itinerary')) document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
         }
       }
     }
