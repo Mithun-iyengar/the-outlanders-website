@@ -2,14 +2,21 @@
 const { createClient } = require('@supabase/supabase-js');
 try { require('dotenv').config(); } catch(e){}
 
+// Allow local Windows Node.js dev environment SSL certificate verification
+if (process.env.NODE_ENV !== 'production' && typeof process !== 'undefined') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://qcwnzaeydvosuiclddqr.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '';
+const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_OgXymBA4gWFDUOuykSgvCA_6SRbPjSL';
 
 let supabase = null;
 
 if (SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY) {
   try {
-    supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { persistSession: false }
+    });
     console.log(`⚡ Supabase client initialized for URL: ${SUPABASE_URL}`);
   } catch (err) {
     console.warn('⚠️ Supabase client initialization warning:', err.message);
@@ -27,7 +34,7 @@ async function testConnection() {
     if (error) {
       return { success: false, connected: false, error: error.message };
     }
-    return { success: true, connected: true, count: Array.isArray(data) ? data.length : 0 };
+    return { success: true, connected: true, data, count: Array.isArray(data) ? data.length : 0 };
   } catch (err) {
     return { success: false, connected: false, error: err.message };
   }
@@ -36,5 +43,6 @@ async function testConnection() {
 module.exports = {
   supabase,
   SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
   testConnection
 };
