@@ -318,18 +318,28 @@
     {
       "id": "gokarna-getaway",
       "name": "Gokarna Getaway",
+      "title": "Gokarna Getaway",
       "slug": "gokarna-getaway",
       "category": "Weekend Trips",
       "location": "Gokarna, Karnataka",
       "date": "Every Friday Departure",
       "duration": "2 Days / 1 Night",
+      "difficulty": "Easy",
       "price": 4499,
       "image": "../images/trips/gokarna/cover.jpg",
       "coverImage": "../images/trips/gokarna/cover.jpg",
+      "shortDescription": "A relaxed coastal escape with beach walks, sunrise views and campfire evenings.",
       "description": "A relaxed coastal escape with beach walks, sunrise views and campfire evenings.",
+      "itinerary": "../images/uploads/gokarna-pdf-1787671561955-810257327.pdf",
+      "inclusions": [
+        "Professional Guide & Lead",
+        "Meals & Refreshments",
+        "First Aid & Safety Gear",
+        "Permits & Local Entry Fees"
+      ],
       "published": true,
       "created_at": 1787670641047,
-      "updated_at": 1787671074971
+      "updated_at": 1787671562076
     }
   ],
   "media": []
