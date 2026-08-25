@@ -1,5 +1,32 @@
 [
   {
+    "id": "unauthorized-trek",
+    "name": "Unauthorized Trek",
+    "slug": "unauthorized-trek",
+    "category": "Western Ghats",
+    "location": "",
+    "date": "Every Friday Departure",
+    "duration": "2 Days",
+    "difficulty": "Moderate",
+    "price": 0,
+    "image": "",
+    "coverImage": "",
+    "featuredImage": "",
+    "shortDescription": "",
+    "description": "",
+    "featured": false,
+    "published": true,
+    "itinerary": "",
+    "inclusions": [
+      "Professional Guide & Lead",
+      "Meals & Refreshments",
+      "First Aid & Safety Gear",
+      "Permits & Local Entry Fees"
+    ],
+    "created_at": 1787671421898,
+    "updated_at": 1787671421898
+  },
+  {
     "id": "kudremukha",
     "name": "Kudremukha Trek",
     "slug": "kudremukha",
