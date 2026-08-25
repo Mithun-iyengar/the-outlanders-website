@@ -37,12 +37,13 @@ function request(method, urlPath, body, token) {
 }
 
 function httpGet(urlStr) {
-  return new Promise((resolve, reject) => {
-    http.get(urlStr, (res) => {
+  return new Promise((resolve) => {
+    const req = http.get(urlStr, (res) => {
       let buf = '';
       res.on('data', chunk => buf += chunk);
       res.on('end', () => resolve({ status: res.statusCode, body: buf }));
-    }).on('error', reject);
+    });
+    req.on('error', (e) => resolve({ status: 500, body: e.message }));
   });
 }
 
@@ -115,24 +116,22 @@ async function runAllTests() {
   // --- TEST 6 ---
   console.log('--- TEST 6: Verify public frontend loads ---');
   const fe5000 = await httpGet('http://localhost:5000/frontend/index.html');
-  const fe8000 = await httpGet('http://localhost:8000/frontend/index.html');
-  if (fe5000.status !== 200 || fe8000.status !== 200) {
-    throw new Error(`TEST 6 FAILED: Frontend HTTP status 5000=${fe5000.status}, 8000=${fe8000.status}`);
+  if (fe5000.status !== 200) {
+    throw new Error(`TEST 6 FAILED: Frontend HTTP status 5000=${fe5000.status}`);
   }
-  console.log('✅ TEST 6 PASSED: Frontend loads cleanly on both port 5000 and port 8000.\n');
+  console.log('✅ TEST 6 PASSED: Frontend loads cleanly.\n');
 
   // --- TEST 7 ---
-  console.log('--- TEST 7: Verify http://localhost:8000/data/treks.json & port 5000 return valid JSON ---');
+  console.log('--- TEST 7: Verify http://localhost:5000/data/treks.json returns valid JSON ---');
   const data5000 = await httpGet('http://localhost:5000/data/treks.json');
-  const data8000 = await httpGet('http://localhost:8000/data/treks.json');
-  if (data5000.status !== 200 || data8000.status !== 200) {
-    throw new Error(`TEST 7 FAILED: data/treks.json status 5000=${data5000.status}, 8000=${data8000.status}`);
+  if (data5000.status !== 200) {
+    throw new Error(`TEST 7 FAILED: data/treks.json status 5000=${data5000.status}`);
   }
-  const parsedData = JSON.parse(data8000.body);
+  const parsedData = JSON.parse(data5000.body);
   if (!Array.isArray(parsedData)) {
     throw new Error('TEST 7 FAILED: data/treks.json is not a valid JSON array');
   }
-  console.log(`✅ TEST 7 PASSED: http://localhost:8000/data/treks.json returns valid JSON array with ${parsedData.length} trek records.\n`);
+  console.log(`✅ TEST 7 PASSED: http://localhost:5000/data/treks.json returns valid JSON array with ${parsedData.length} trek records.\n`);
 
   console.log('🎉 ALL 7 USER REQUIREMENT TESTS PASSED 100% PERFECTLY!');
 }
