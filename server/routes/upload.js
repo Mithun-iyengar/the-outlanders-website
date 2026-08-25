@@ -1,56 +1,74 @@
-// server/routes/upload.js - File Upload Endpoint for Persistent Cloud Storage & Local Backup
+// server/routes/upload.js - Serverless-Safe File Upload System (Supabase Storage + Local Backup)
 const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 const { authMiddleware } = require('../middleware/auth');
 
-let multer = null;
-try { multer = require('multer'); } catch(e){}
+const isVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
+const UPLOADS_DIR = path.join(__dirname, '../../images/uploads');
 
-let supabase = null;
-if (process.env.SUPABASE_URL && (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY)) {
+// Safe lazy local directory initialization (ONLY for local development)
+function ensureLocalUploadDir(folder = '') {
+  if (isVercel) return null;
   try {
-    const { createClient } = require('@supabase/supabase-js');
-    supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY
-    );
+    const targetDir = folder ? path.join(UPLOADS_DIR, folder) : UPLOADS_DIR;
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    return targetDir;
   } catch (e) {
-    console.warn('Supabase Storage Client Init warning:', e.message);
+    console.warn('Local directory creation skipped:', e.message);
+    return null;
   }
 }
 
-const UPLOADS_DIR = path.join(__dirname, '../../images/uploads');
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
+let multer = null;
+try { multer = require('multer'); } catch(e){}
 
 let upload = null;
 if (multer) {
   const storage = multer.memoryStorage();
   upload = multer({
     storage: storage,
-    limits: { fileSize: 15 * 1024 * 1024 },
+    limits: { fileSize: 20 * 1024 * 1024 },
     fileFilter: function (req, file, cb) {
       cb(null, true);
     }
   });
 }
 
-async function uploadSingleFileToProvider(file, folder = '') {
+// Initialize Supabase Storage client securely
+function getSupabaseClient() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) return null;
+
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    return createClient(url, key);
+  } catch (e) {
+    console.warn('Supabase client initialization warning:', e.message);
+    return null;
+  }
+}
+
+async function processSingleUpload(file, folder = '') {
   const ext = path.extname(file.originalname) || '.jpg';
   const cleanName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
   const subFolder = folder ? folder.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '/' : '';
   const filename = `${subFolder}${cleanName}-${Date.now()}${ext}`;
 
+  const supabase = getSupabaseClient();
   if (supabase) {
     try {
       const bucketName = process.env.SUPABASE_BUCKET || 'outlanders-images';
+      const contentType = file.mimetype || (ext.toLowerCase() === '.pdf' ? 'application/pdf' : 'image/jpeg');
+
       const { data, error } = await supabase.storage
         .from(bucketName)
         .upload(filename, file.buffer, {
-          contentType: file.mimetype || 'image/jpeg',
+          contentType: contentType,
           upsert: true
         });
 
@@ -66,105 +84,128 @@ async function uploadSingleFileToProvider(file, folder = '') {
           filename: filename,
           provider: 'supabase'
         };
+      } else if (error) {
+        console.warn('Supabase storage upload error:', error.message);
       }
     } catch (supabaseErr) {
       console.warn('Supabase storage upload exception:', supabaseErr.message);
     }
   }
 
-  try {
-    const folderDir = folder ? path.join(UPLOADS_DIR, folder) : UPLOADS_DIR;
-    if (!fs.existsSync(folderDir)) {
-      fs.mkdirSync(folderDir, { recursive: true });
+  // Local disk backup if running locally
+  if (!isVercel) {
+    try {
+      const folderDir = ensureLocalUploadDir(folder);
+      if (folderDir) {
+        const baseFilename = `${cleanName}-${Date.now()}${ext}`;
+        const diskPath = path.join(folderDir, baseFilename);
+        fs.writeFileSync(diskPath, file.buffer);
+
+        const relPath = folder ? `../images/uploads/${folder}/${baseFilename}` : `../images/uploads/${baseFilename}`;
+        const fullPath = folder ? `/images/uploads/${folder}/${baseFilename}` : `/images/uploads/${baseFilename}`;
+
+        return {
+          success: true,
+          url: relPath,
+          fullUrl: fullPath,
+          filename: baseFilename,
+          provider: 'disk'
+        };
+      }
+    } catch (diskErr) {
+      console.warn('Disk upload write skipped:', diskErr.message);
     }
-
-    const baseFilename = `${cleanName}-${Date.now()}${ext}`;
-    const diskPath = path.join(folderDir, baseFilename);
-    fs.writeFileSync(diskPath, file.buffer);
-
-    const relPath = folder ? `../images/uploads/${folder}/${baseFilename}` : `../images/uploads/${baseFilename}`;
-    const fullPath = folder ? `/images/uploads/${folder}/${baseFilename}` : `/images/uploads/${baseFilename}`;
-
-    return {
-      success: true,
-      url: relPath,
-      fullUrl: fullPath,
-      filename: baseFilename,
-      provider: 'disk'
-    };
-  } catch (diskErr) {
-    console.warn('Disk upload write skipped:', diskErr.message);
-    const base64Str = `data:${file.mimetype || 'image/jpeg'};base64,${file.buffer.toString('base64')}`;
-    return {
-      success: true,
-      url: base64Str,
-      fullUrl: base64Str,
-      filename: file.originalname,
-      provider: 'memory'
-    };
   }
+
+  // Memory Base64 Fallback
+  const mime = file.mimetype || (ext.toLowerCase() === '.pdf' ? 'application/pdf' : 'image/jpeg');
+  const base64Str = `data:${mime};base64,${file.buffer.toString('base64')}`;
+  return {
+    success: true,
+    url: base64Str,
+    fullUrl: base64Str,
+    filename: file.originalname,
+    provider: 'memory'
+  };
 }
 
 // POST /api/upload - Single File Upload (Protected)
 router.post('/', authMiddleware, async (req, res) => {
-  const contentType = req.headers['content-type'] || '';
-  console.log('UPLOAD ROUTE HIT -> Content-Type:', contentType, 'Body:', req.body ? Object.keys(req.body) : 'none');
+  try {
+    const contentType = req.headers['content-type'] || '';
 
-  if (req.body && (req.body.base64 || req.body.image || req.body.file)) {
-    const base64 = req.body.base64 || req.body.image || req.body.file;
-    const filename = req.body.filename || ('upload-' + Date.now() + '.png');
-    const cleanFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '-');
-    const filePath = path.join(UPLOADS_DIR, cleanFilename);
-    const base64Data = base64.replace(/^data:image\/\w+;base64,/, '');
-    fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
-
-    return res.status(201).json({
-      success: true,
-      url: `../images/uploads/${cleanFilename}`,
-      fullUrl: `/images/uploads/${cleanFilename}`,
-      filename: cleanFilename,
-      provider: 'disk'
-    });
-  }
-
-  if (upload && contentType.includes('multipart')) {
-    upload.single('file')(req, res, async (err) => {
-      if (err) return res.status(400).json({ error: err.message });
-      if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
-      }
-
+    // Handle JSON Base64 Upload
+    if (req.body && (req.body.base64 || req.body.image || req.body.file)) {
+      const base64Payload = req.body.base64 || req.body.image || req.body.file;
+      const originalName = req.body.filename || ('upload-' + Date.now() + '.png');
       const folder = req.query.folder || req.body.folder || '';
-      const result = await uploadSingleFileToProvider(req.file, folder);
+
+      const base64Clean = base64Payload.replace(/^data:[^;]+;base64,/, '');
+      const fileBuffer = Buffer.from(base64Clean, 'base64');
+      const mimeMatch = base64Payload.match(/^data:([^;]+);base64,/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+
+      const fileObj = {
+        originalname: originalName,
+        mimetype: mimeType,
+        buffer: fileBuffer
+      };
+
+      const result = await processSingleUpload(fileObj, folder);
       return res.status(201).json(result);
-    });
-  } else {
-    return res.status(400).json({ error: 'No file uploaded. Expected multipart form-data or JSON with base64 field.' });
+    }
+
+    // Handle Multipart Form Upload
+    if (upload && contentType.includes('multipart')) {
+      upload.single('file')(req, res, async (err) => {
+        if (err) return res.status(400).json({ success: false, error: err.message });
+        if (!req.file) {
+          return res.status(400).json({ success: false, error: 'No file uploaded' });
+        }
+
+        const folder = req.query.folder || req.body.folder || '';
+        const result = await processSingleUpload(req.file, folder);
+        return res.status(201).json(result);
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid file attachment or base64 payload provided.'
+      });
+    }
+  } catch (err) {
+    console.error('POST /api/upload handler error:', err);
+    return res.status(500).json({ success: false, error: 'Upload failed: ' + err.message });
   }
 });
 
 // POST /api/upload/batch - Multiple File Upload (Protected)
 router.post('/batch', authMiddleware, async (req, res) => {
-  if (!upload) return res.status(400).json({ error: 'Multer is required for batch uploads' });
+  try {
+    if (!upload) return res.status(400).json({ success: false, error: 'Multer unavailable' });
 
-  upload.array('files', 50)(req, res, async (err) => {
-    if (err) return res.status(400).json({ error: err.message });
-    if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No files uploaded' });
+    upload.array('files', 50)(req, res, async (err) => {
+      if (err) return res.status(400).json({ success: false, error: err.message });
+      if (!req.files || req.files.length === 0) return res.status(400).json({ success: false, error: 'No files uploaded' });
 
-    const folder = req.query.folder || req.body.folder || '';
-    const results = [];
+      const folder = req.query.folder || req.body.folder || '';
+      const results = [];
 
-    for (let file of req.files) {
-      const resSingle = await uploadSingleFileToProvider(file, folder);
-      results.push(resSingle);
-    }
+      for (let file of req.files) {
+        const resSingle = await processSingleUpload(file, folder);
+        results.push(resSingle);
+      }
 
-    return res.status(201).json({
-      success: true,
-      count: results.length,
-      files: results
+      return res.status(201).json({
+        success: true,
+        count: results.length,
+        files: results
+      });
     });
-  });
+  } catch (err) {
+    console.error('POST /api/upload/batch handler error:', err);
+    return res.status(500).json({ success: false, error: 'Batch upload failed: ' + err.message });
+  }
 });
 
 module.exports = router;
