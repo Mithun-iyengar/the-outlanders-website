@@ -6,7 +6,7 @@
   <title>Homepage Content Manager — Admin</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="css/admin.css?v=20260825-v11" rel="stylesheet">
+  <link href="css/admin.css?v=20260825-v15" rel="stylesheet">
 </head>
 <body class="bg-light">
   <!-- Mobile Navbar -->
@@ -36,7 +36,8 @@
         <li class="nav-item"><a href="treks.html" class="nav-link text-white"><i class="bi bi-person-walking me-2"></i> Treks Manager</a></li>
         <li class="nav-item"><a href="trips.html" class="nav-link text-white"><i class="bi bi-map me-2"></i> Trips Manager</a></li>
         <li class="nav-item"><a href="categories.html" class="nav-link text-white"><i class="bi bi-grid-3x3-gap me-2"></i> Categories Manager</a></li>
-        <li class="nav-item"><a href="media.html" class="nav-link text-white"><i class="bi bi-images me-2"></i> Media Library</a></li>
+        <li class="nav-item"><a href="memories.html" class="nav-link text-white"><i class="bi bi-images me-2"></i> Memories Gallery</a></li>
+        <li class="nav-item"><a href="media.html" class="nav-link text-white"><i class="bi bi-folder me-2"></i> Media Library</a></li>
         <li class="nav-item"><a href="about.html" class="nav-link text-white"><i class="bi bi-info-circle me-2"></i> About Us Editor</a></li>
         <li class="nav-item"><a href="settings.html" class="nav-link text-white"><i class="bi bi-gear me-2"></i> Settings & Social</a></li>
         <li class="nav-item mt-4"><a href="#" id="mobileLogout" class="nav-link text-warning"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
@@ -66,13 +67,18 @@
     </nav>
 
     <!-- Main Editor -->
-    <main class="p-4 flex-grow-1">
+    <main class="p-4 flex-grow-1" id="homepageMain">
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h3 class="fw-bold mb-0">HOMEPAGE CONTENT MANAGER</h3>
           <p class="text-muted small mb-0">Edit all text headings, subheadings, hero background image, experience cards, and CTA sections.</p>
         </div>
-        <a href="../frontend/index.html" target="_blank" class="btn btn-outline-dark btn-sm fw-bold"><i class="bi bi-eye me-1"></i> Preview Live Homepage</a>
+        <div class="d-flex align-items-center gap-2">
+          <div id="unsavedBadge" class="badge bg-warning text-dark font-monospace px-3 py-2 d-none">
+            <i class="bi bi-exclamation-circle-fill me-1"></i> UNSAVED CHANGES
+          </div>
+          <a href="../frontend/index.html" target="_blank" class="btn btn-outline-dark btn-sm fw-bold"><i class="bi bi-eye me-1"></i> Preview Live Homepage</a>
+        </div>
       </div>
 
       <div id="hpAlert" class="mb-3"></div>
@@ -131,7 +137,7 @@
       <div class="card p-4 shadow-sm border-0 mb-4 section-card-discover" style="background: #FFFFFF;">
         <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3 section-banner" style="background: linear-gradient(135deg, #2A1D0C 0%, #1A130A 100%);">
           <h5 class="fw-bold mb-0 text-white"><i class="bi bi-grid-3x3-gap-fill text-warning me-2"></i>2. Discover By Experience Cards</h5>
-          <button id="addDiscCardBtn" class="btn btn-sm btn-warning text-dark fw-bold px-3"><i class="bi bi-plus-lg me-1"></i> Add Experience Card</button>
+          <button id="addDiscCardBtn" type="button" class="btn btn-sm btn-warning text-dark fw-bold px-3"><i class="bi bi-plus-lg me-1"></i> Add Experience Card</button>
         </div>
 
         <div class="row g-3 mb-3">
@@ -158,7 +164,7 @@
       <div class="card p-4 shadow-sm border-0 mb-4 section-card-why" style="background: #FFFFFF;">
         <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3 section-banner" style="background: linear-gradient(135deg, #0C281E 0%, #081B14 100%);">
           <h5 class="fw-bold mb-0 text-white"><i class="bi bi-shield-check me-2" style="color: #34D399;"></i>3. Why Trek With Us Features</h5>
-          <button id="addFeatureBtn" class="btn btn-sm btn-success fw-bold px-3"><i class="bi bi-plus-lg me-1"></i> Add Feature Card</button>
+          <button id="addFeatureBtn" type="button" class="btn btn-sm btn-success fw-bold px-3"><i class="bi bi-plus-lg me-1"></i> Add Feature Card</button>
         </div>
 
         <div class="row g-3 mb-3">
@@ -233,19 +239,57 @@
       <div class="position-sticky bottom-0 bg-white p-3 border rounded shadow-lg d-flex justify-content-between align-items-center" style="z-index: 1000;">
         <span class="text-muted small fw-bold"><i class="bi bi-info-circle text-primary me-1"></i> Save all homepage section changes to reflect live on the website.</span>
         <div class="d-flex gap-2">
-          <button id="saveHpBtn" class="btn btn-primary fw-bold px-4 shadow-sm"><i class="bi bi-check-lg me-1"></i> SAVE ALL HOMEPAGE CHANGES</button>
+          <button id="triggerSaveHpBtn" type="button" class="btn btn-primary fw-bold px-4 shadow-sm"><i class="bi bi-check-lg me-1"></i> SAVE ALL HOMEPAGE CHANGES</button>
         </div>
       </div>
 
     </main>
   </div>
 
+  <!-- Save Confirmation Modal -->
+  <div class="modal fade" id="saveHomepageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold"><i class="bi bi-cloud-arrow-up-fill me-2"></i>Save changes to Homepage content?</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="fs-6 text-secondary mb-0">Your homepage edits will be updated on the live website. Do you want to continue?</p>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary fw-bold px-4" data-bs-dismiss="modal">CANCEL</button>
+          <button type="button" class="btn btn-primary fw-bold px-4" id="confirmSaveHpBtn">SAVE CHANGES</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../frontend/js/data-api.js?v=20260825-v11"></script>
-  <script src="js/admin.js?v=20260825-v11"></script>
+  <script src="../frontend/js/data-api.js?v=20260825-v15"></script>
+  <script src="js/auth-check.js"></script>
+  <script src="js/admin.js?v=20260825-v15"></script>
   <script>
     (async ()=>{
-      if(!isLoggedIn()){ location.href = 'index.html'; return; }
+      if (window.requireLogin) requireLogin();
+
+      const saveModalEl = document.getElementById('saveHomepageModal');
+      const saveModal = (saveModalEl && typeof bootstrap !== 'undefined') ? new bootstrap.Modal(saveModalEl) : null;
+      const unsavedBadge = document.getElementById('unsavedBadge');
+
+      const mainEditor = document.getElementById('homepageMain');
+      if (mainEditor) {
+        mainEditor.addEventListener('input', markDirty);
+        mainEditor.addEventListener('change', markDirty);
+      }
+
+      function markDirty() {
+        if (unsavedBadge) unsavedBadge.classList.remove('d-none');
+      }
+
+      function clearDirty() {
+        if (unsavedBadge) unsavedBadge.classList.add('d-none');
+      }
 
       const hpData = await DataAPI.getHomepageContent();
 
@@ -264,18 +308,25 @@
         document.getElementById('heroBgPrev').src = heroBg;
       }
 
-      // Live hero image preview
+      // Live hero image preview & upload
       document.getElementById('heroBgImage').addEventListener('input', (e)=>{
         document.getElementById('heroBgPrev').src = e.target.value;
       });
-      document.getElementById('heroBgFile').addEventListener('change', (e)=>{
+      document.getElementById('heroBgFile').addEventListener('change', async (e)=>{
         if(e.target.files && e.target.files[0]){
-          const reader = new FileReader();
-          reader.onload = ()=>{
-            document.getElementById('heroBgImage').value = reader.result;
-            document.getElementById('heroBgPrev').src = reader.result;
-          };
-          reader.readAsDataURL(e.target.files[0]);
+          try {
+            const res = await DataAPI.uploadFile(e.target.files[0]);
+            const url = res.url || res.fullUrl;
+            document.getElementById('heroBgImage').value = url;
+            document.getElementById('heroBgPrev').src = url;
+          } catch(err) {
+            const reader = new FileReader();
+            reader.onload = ()=>{
+              document.getElementById('heroBgImage').value = reader.result;
+              document.getElementById('heroBgPrev').src = reader.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+          }
         }
       });
 
@@ -321,22 +372,23 @@
           </div>
         `).join('');
 
-        // Wire inputs
-        document.querySelectorAll('.discCardTitle').forEach(inp => inp.addEventListener('input', e => discoverCards[e.target.dataset.idx].title = e.target.value));
-        document.querySelectorAll('.discCardAction').forEach(inp => inp.addEventListener('input', e => discoverCards[e.target.dataset.idx].action = e.target.value));
-        document.querySelectorAll('.discCardLink').forEach(inp => inp.addEventListener('input', e => discoverCards[e.target.dataset.idx].link = e.target.value));
+        document.querySelectorAll('.discCardTitle').forEach(inp => inp.addEventListener('input', e => { discoverCards[e.target.dataset.idx].title = e.target.value; markDirty(); }));
+        document.querySelectorAll('.discCardAction').forEach(inp => inp.addEventListener('input', e => { discoverCards[e.target.dataset.idx].action = e.target.value; markDirty(); }));
+        document.querySelectorAll('.discCardLink').forEach(inp => inp.addEventListener('input', e => { discoverCards[e.target.dataset.idx].link = e.target.value; markDirty(); }));
         document.querySelectorAll('.discCardImg').forEach(inp => inp.addEventListener('input', e => {
           discoverCards[e.target.dataset.idx].image = e.target.value;
           const prev = document.getElementById('prevDisc_' + e.target.dataset.idx);
           if(prev) prev.src = e.target.value;
+          markDirty();
         }));
-        document.querySelectorAll('.discCardPub').forEach(chk => chk.addEventListener('change', e => discoverCards[e.target.dataset.idx].published = e.target.checked));
+        document.querySelectorAll('.discCardPub').forEach(chk => chk.addEventListener('change', e => { discoverCards[e.target.dataset.idx].published = e.target.checked; markDirty(); }));
 
         document.querySelectorAll('.delDiscCard').forEach(btn => btn.addEventListener('click', function(){
           const idx = parseInt(this.dataset.idx);
           if(confirm('Delete this Experience Card?')){
             discoverCards.splice(idx, 1);
             renderDiscoverCardsList();
+            markDirty();
           }
         }));
       }
@@ -353,6 +405,7 @@
           published: true
         });
         renderDiscoverCardsList();
+        markDirty();
       });
 
       // Populate Why Trek Features
@@ -385,12 +438,13 @@
           </div>
         `).join('');
 
-        document.querySelectorAll('.featIcon').forEach(inp => inp.addEventListener('input', e => whyFeatures[e.target.dataset.idx].icon = e.target.value));
-        document.querySelectorAll('.featTitle').forEach(inp => inp.addEventListener('input', e => whyFeatures[e.target.dataset.idx].title = e.target.value));
-        document.querySelectorAll('.featDesc').forEach(inp => inp.addEventListener('input', e => whyFeatures[e.target.dataset.idx].desc = e.target.value));
+        document.querySelectorAll('.featIcon').forEach(inp => inp.addEventListener('input', e => { whyFeatures[e.target.dataset.idx].icon = e.target.value; markDirty(); }));
+        document.querySelectorAll('.featTitle').forEach(inp => inp.addEventListener('input', e => { whyFeatures[e.target.dataset.idx].title = e.target.value; markDirty(); }));
+        document.querySelectorAll('.featDesc').forEach(inp => inp.addEventListener('input', e => { whyFeatures[e.target.dataset.idx].desc = e.target.value; markDirty(); }));
         document.querySelectorAll('.delFeature').forEach(btn => btn.addEventListener('click', function(){
           whyFeatures.splice(parseInt(this.dataset.idx), 1);
           renderWhyFeaturesList();
+          markDirty();
         }));
       }
       renderWhyFeaturesList();
@@ -405,6 +459,7 @@
           published: true
         });
         renderWhyFeaturesList();
+        markDirty();
       });
 
       // Populate Community & Final CTA
@@ -423,50 +478,87 @@
         document.getElementById('ctaBgImage').value = hpData.finalCta.bgImage || '../images/hero/scroll-back.jpg';
       }
 
-      // Save Handler
-      document.getElementById('saveHpBtn').addEventListener('click', async ()=>{
-        const payload = {
-          hero: {
-            eyebrow: document.getElementById('heroEyebrow').value.trim(),
-            title: document.getElementById('heroTitle').value.trim(),
-            sub: document.getElementById('heroSub').value.trim(),
-            btn1Text: document.getElementById('heroBtn1Text').value.trim(),
-            btn1Link: document.getElementById('heroBtn1Link').value.trim(),
-            btn2Text: document.getElementById('heroBtn2Text').value.trim(),
-            btn2Link: document.getElementById('heroBtn2Link').value.trim(),
-            bgImage: document.getElementById('heroBgImage').value.trim()
-          },
-          discover: {
-            eyebrow: document.getElementById('discEyebrow').value.trim(),
-            title: document.getElementById('discTitle').value.trim(),
-            sub: document.getElementById('discSub').value.trim(),
-            cards: discoverCards
-          },
-          whyTrek: {
-            eyebrow: document.getElementById('whyEyebrow').value.trim(),
-            title: document.getElementById('whyTitle').value.trim(),
-            features: whyFeatures
-          },
-          community: {
-            eyebrow: document.getElementById('commEyebrow').value.trim(),
-            title: document.getElementById('commTitle').value.trim(),
-            desc: document.getElementById('commDesc').value.trim(),
-            btnText: document.getElementById('commBtnText').value.trim()
-          },
-          finalCta: {
-            title: document.getElementById('ctaTitle').value.trim(),
-            desc: document.getElementById('ctaDesc').value.trim(),
-            btnText: document.getElementById('ctaBtnText').value.trim(),
-            btnLink: document.getElementById('ctaBtnLink').value.trim(),
-            bgImage: document.getElementById('ctaBgImage').value.trim()
+      // Trigger Save Modal
+      const triggerSaveHpBtn = document.getElementById('triggerSaveHpBtn');
+      if (triggerSaveHpBtn) {
+        triggerSaveHpBtn.addEventListener('click', () => {
+          if (saveModal) {
+            saveModal.show();
+          } else {
+            executeSaveHp();
           }
-        };
+        });
+      }
 
-        await DataAPI.updateHomepageContent(payload);
-        const alertEl = document.getElementById('hpAlert');
-        alertEl.innerHTML = '<div class="alert alert-success alert-dismissible fade show fw-bold mb-0"><i class="bi bi-check-circle-fill me-2"></i> Homepage sections updated successfully! <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
+      const confirmSaveHpBtn = document.getElementById('confirmSaveHpBtn');
+      if (confirmSaveHpBtn) {
+        confirmSaveHpBtn.addEventListener('click', async () => {
+          await executeSaveHp();
+        });
+      }
+
+      async function executeSaveHp() {
+        if (confirmSaveHpBtn) {
+          confirmSaveHpBtn.disabled = true;
+          confirmSaveHpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+        }
+
+        try {
+          const payload = {
+            hero: {
+              eyebrow: document.getElementById('heroEyebrow').value.trim(),
+              title: document.getElementById('heroTitle').value.trim(),
+              sub: document.getElementById('heroSub').value.trim(),
+              btn1Text: document.getElementById('heroBtn1Text').value.trim(),
+              btn1Link: document.getElementById('heroBtn1Link').value.trim(),
+              btn2Text: document.getElementById('heroBtn2Text').value.trim(),
+              btn2Link: document.getElementById('heroBtn2Link').value.trim(),
+              bgImage: document.getElementById('heroBgImage').value.trim()
+            },
+            discover: {
+              eyebrow: document.getElementById('discEyebrow').value.trim(),
+              title: document.getElementById('discTitle').value.trim(),
+              sub: document.getElementById('discSub').value.trim(),
+              cards: discoverCards
+            },
+            whyTrek: {
+              eyebrow: document.getElementById('whyEyebrow').value.trim(),
+              title: document.getElementById('whyTitle').value.trim(),
+              features: whyFeatures
+            },
+            community: {
+              eyebrow: document.getElementById('commEyebrow').value.trim(),
+              title: document.getElementById('commTitle').value.trim(),
+              desc: document.getElementById('commDesc').value.trim(),
+              btnText: document.getElementById('commBtnText').value.trim()
+            },
+            finalCta: {
+              title: document.getElementById('ctaTitle').value.trim(),
+              desc: document.getElementById('ctaDesc').value.trim(),
+              btnText: document.getElementById('ctaBtnText').value.trim(),
+              btnLink: document.getElementById('ctaBtnLink').value.trim(),
+              bgImage: document.getElementById('ctaBgImage').value.trim()
+            }
+          };
+
+          await DataAPI.updateHomepageContent(payload);
+          clearDirty();
+          if (saveModal) saveModal.hide();
+
+          const alertEl = document.getElementById('hpAlert');
+          if (alertEl) {
+            alertEl.innerHTML = '<div class="alert alert-success alert-dismissible fade show fw-bold mb-0"><i class="bi bi-check-circle-fill me-2"></i> Homepage sections updated successfully! <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch(err) {
+          alert('Failed to save homepage content: ' + err.message);
+        } finally {
+          if (confirmSaveHpBtn) {
+            confirmSaveHpBtn.disabled = false;
+            confirmSaveHpBtn.innerHTML = 'SAVE CHANGES';
+          }
+        }
+      }
 
     })();
   </script>

@@ -426,12 +426,57 @@ async function getCategories() {
           description: row.description,
           image: row.image,
           order: row.order_num,
+          order_num: row.order_num,
           published: row.published
         }));
       }
     } catch (e) {}
   }
   return readLocalStore().categories || DEFAULT_CATEGORIES;
+}
+
+async function saveCategory(catData) {
+  const cats = await getCategories();
+  const existingIdx = cats.findIndex(c => c.id === catData.id || c.slug === catData.id);
+  const existing = existingIdx !== -1 ? cats[existingIdx] : {};
+
+  const catObj = Object.assign({}, existing, catData, {
+    id: catData.id || existing.id || ('cat-' + Date.now()),
+    name: catData.name || existing.name || 'Untitled Category',
+    slug: catData.slug || catData.name || existing.slug || '',
+    description: catData.description || existing.description || '',
+    image: catData.image || existing.image || '',
+    order: catData.order !== undefined ? Number(catData.order) : (existing.order || 1),
+    order_num: catData.order_num !== undefined ? Number(catData.order_num) : (existing.order_num || 1),
+    published: catData.published !== undefined ? catData.published !== false : (existing.published !== false)
+  });
+
+  const local = readLocalStore();
+  local.categories = local.categories || [];
+  if (existingIdx !== -1) {
+    local.categories[existingIdx] = catObj;
+  } else {
+    local.categories.push(catObj);
+  }
+  writeLocalStore(local);
+
+  if (db.isDbConnected()) {
+    try {
+      await db.query(`
+        INSERT INTO categories (id, name, slug, description, image, order_num, published)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (id) DO UPDATE SET
+          name = EXCLUDED.name,
+          slug = EXCLUDED.slug,
+          description = EXCLUDED.description,
+          image = EXCLUDED.image,
+          order_num = EXCLUDED.order_num,
+          published = EXCLUDED.published
+      `, [catObj.id, catObj.name, catObj.slug, catObj.description, catObj.image, catObj.order_num || catObj.order, catObj.published]);
+    } catch (e) {}
+  }
+
+  return catObj;
 }
 
 async function saveCategories(categoriesList) {
@@ -442,22 +487,26 @@ async function saveCategories(categoriesList) {
   if (db.isDbConnected()) {
     try {
       for (let c of local.categories) {
-        await db.query(`
-          INSERT INTO categories (id, name, slug, description, image, order_num, published)
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
-          ON CONFLICT (id) DO UPDATE SET
-            name = EXCLUDED.name,
-            slug = EXCLUDED.slug,
-            description = EXCLUDED.description,
-            image = EXCLUDED.image,
-            order_num = EXCLUDED.order_num,
-            published = EXCLUDED.published
-        `, [c.id || 'cat-' + Date.now(), c.name, c.slug || c.name, c.description || '', c.image || '', c.order || 1, c.published !== false]);
+        await saveCategory(c);
       }
     } catch (e) {}
   }
 
   return local.categories;
+}
+
+async function deleteCategory(id) {
+  const local = readLocalStore();
+  local.categories = (local.categories || []).filter(c => c.id !== id && c.slug !== id);
+  writeLocalStore(local);
+
+  if (db.isDbConnected()) {
+    try {
+      await db.query('DELETE FROM categories WHERE id = $1 OR slug = $1', [id]);
+    } catch (e) {}
+  }
+
+  return true;
 }
 
 // === MEMORIES API ===
@@ -543,7 +592,9 @@ module.exports = {
   saveTrip,
   deleteTrip,
   getCategories,
+  saveCategory,
   saveCategories,
+  deleteCategory,
   getMemories,
   saveMemories,
   getContent,
