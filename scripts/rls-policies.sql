@@ -1,4 +1,4 @@
--- SQL Script: Row Level Security (RLS) Policies for The Outlanders Supabase Database
+-- SQL Script: Row Level Security (RLS) Policies for The Outlanders Supabase Database (Option B)
 
 -- 1. Enable Row Level Security on all 6 tables
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
@@ -21,9 +21,9 @@ DROP POLICY IF EXISTS "Admin full access memories" ON memories;
 DROP POLICY IF EXISTS "Public read content" ON content;
 DROP POLICY IF EXISTS "Admin full access content" ON content;
 
--- 3. Define RLS Policies
+-- 3. Define Refined Option B RLS Policies
 
--- ADMIN_USERS: Strictly block public/anon access. Protect passwords.
+-- ADMIN_USERS: Strictly block public/anon access. Protect password hashes.
 CREATE POLICY "Deny public access to admin_users"
   ON admin_users
   FOR ALL
@@ -37,26 +37,12 @@ CREATE POLICY "Public read published treks"
   TO anon
   USING (published = true);
 
-CREATE POLICY "Admin full access treks"
-  ON treks
-  FOR ALL
-  TO authenticated, service_role
-  USING (true)
-  WITH CHECK (true);
-
 -- TRIPS: Public read published trips only. Block public inserts, updates, deletes.
 CREATE POLICY "Public read published trips"
   ON trips
   FOR SELECT
   TO anon
   USING (published = true);
-
-CREATE POLICY "Admin full access trips"
-  ON trips
-  FOR ALL
-  TO authenticated, service_role
-  USING (true)
-  WITH CHECK (true);
 
 -- CATEGORIES: Public read published categories only. Block public writes.
 CREATE POLICY "Public read published categories"
@@ -65,13 +51,6 @@ CREATE POLICY "Public read published categories"
   TO anon
   USING (published = true);
 
-CREATE POLICY "Admin full access categories"
-  ON categories
-  FOR ALL
-  TO authenticated, service_role
-  USING (true)
-  WITH CHECK (true);
-
 -- MEMORIES: Public read published memories only. Block public writes.
 CREATE POLICY "Public read published memories"
   ON memories
@@ -79,23 +58,9 @@ CREATE POLICY "Public read published memories"
   TO anon
   USING (published = true);
 
-CREATE POLICY "Admin full access memories"
-  ON memories
-  FOR ALL
-  TO authenticated, service_role
-  USING (true)
-  WITH CHECK (true);
-
 -- CONTENT: Public read site content. Block public writes.
 CREATE POLICY "Public read content"
   ON content
   FOR SELECT
   TO anon
   USING (true);
-
-CREATE POLICY "Admin full access content"
-  ON content
-  FOR ALL
-  TO authenticated, service_role
-  USING (true)
-  WITH CHECK (true);
