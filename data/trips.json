@@ -2,40 +2,17 @@
   {
     "id": "gokarna-getaway",
     "name": "Gokarna Getaway",
-    "category": "Weekend Getaway",
+    "slug": "gokarna-getaway",
+    "category": "Weekend Trips",
     "location": "Gokarna, Karnataka",
     "date": "Every Friday Departure",
     "duration": "2 Days",
-    "price": 2499,
+    "price": 4499,
     "image": "../images/trips/gokarna/cover.jpg",
     "coverImage": "../images/trips/gokarna/cover.jpg",
     "description": "A relaxed coastal escape with beach walks, sunrise views and campfire evenings.",
-    "published": true
-  },
-  {
-    "id": "weekend-camping",
-    "name": "Weekend Camping Experience",
-    "category": "Camping",
-    "location": "Near Bangalore",
-    "date": "Every Friday Departure",
-    "duration": "2 Days",
-    "price": 1999,
-    "image": "../images/trips/camping/cover.jpg",
-    "coverImage": "../images/trips/camping/cover.jpg",
-    "description": "A curated camping trip with guided hikes, campfire activities and professional support.",
-    "published": true
-  },
-  {
-    "id": "adventure-roadtrip",
-    "name": "Adventure Road Trip",
-    "category": "Road Trip",
-    "location": "Western Ghats Loop",
-    "date": "Every Friday Departure",
-    "duration": "4 Days",
-    "price": 4999,
-    "image": "../images/trips/roadtrip/cover.jpg",
-    "coverImage": "../images/trips/roadtrip/cover.jpg",
-    "description": "A multi-day road trip combining scenic drives, short hikes and cultural stops.",
-    "published": true
+    "published": true,
+    "created_at": 1787670641047,
+    "updated_at": 1787670641047
   }
 ]

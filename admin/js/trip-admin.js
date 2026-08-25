@@ -1,4 +1,4 @@
-// trip-admin.js - list, add, edit, duplicate, delete trips using DataAPI with Category & Inclusions support
+// trip-admin.js - list, add, edit, duplicate, delete trips using DataAPI with Duration, Category & Inclusions support
 (function(){
   'use strict';
   document.addEventListener('DOMContentLoaded', async ()=>{
@@ -77,6 +77,7 @@
               </div>
             </div>
           </td>
+          <td><span class="badge bg-light text-dark border font-monospace">${t.duration || '2 Days'}</span></td>
           <td><span class="fw-semibold" style="color: #1E293B;">${t.date || 'Every Friday Departure'}</span></td>
           <td><span style="color: #334155;">${t.location||''}</span></td>
           <td><span class="badge bg-light text-secondary border font-monospace">${t.difficulty || 'Easy'}</span></td>
@@ -145,12 +146,16 @@
           <div class="col-md-6 mb-3"><label class="form-label">Location</label><input class="form-control" id="location" placeholder="e.g. Gokarna, Karnataka"></div>
         </div>
         <div class="row">
-          <div class="col-md-4 mb-3">
+          <div class="col-md-3 mb-3">
             <label class="form-label fw-bold">Date / Schedule*</label>
             <input class="form-control" id="date" placeholder="e.g. Every Friday Departure or Oct 9-10" required>
           </div>
-          <div class="col-md-4 mb-3"><label class="form-label">Price (₹)</label><input id="price" class="form-control" type="number" placeholder="2499"></div>
-          <div class="col-md-4 mb-3">
+          <div class="col-md-3 mb-3">
+            <label class="form-label fw-bold">Duration*</label>
+            <input class="form-control" id="duration" placeholder="e.g. 2 Days / 1 Night" required>
+          </div>
+          <div class="col-md-3 mb-3"><label class="form-label fw-bold">Price (₹)</label><input id="price" class="form-control" type="number" placeholder="2499"></div>
+          <div class="col-md-3 mb-3">
             <label class="form-label fw-bold">Difficulty Level</label>
             <select id="difficulty" class="form-select">
               <option value="Easy">Easy</option>
@@ -264,6 +269,7 @@
       document.getElementById('id').value = trip.id || '';
       document.getElementById('title').value = trip.name || trip.title || '';
       document.getElementById('date').value = trip.date || 'Every Friday Departure';
+      document.getElementById('duration').value = trip.duration || '2 Days / 1 Night';
       document.getElementById('location').value = trip.location || '';
       document.getElementById('price').value = trip.price || '';
       
@@ -307,6 +313,7 @@
         title: titleVal,
         category: document.getElementById('category') ? document.getElementById('category').value : 'Weekend Trips',
         date: document.getElementById('date').value.trim() || 'Every Friday Departure',
+        duration: document.getElementById('duration') ? document.getElementById('duration').value.trim() : '2 Days / 1 Night',
         location: document.getElementById('location').value.trim(),
         price: Number(document.getElementById('price').value) || 0,
         difficulty: document.getElementById('difficulty') ? document.getElementById('difficulty').value : 'Easy',
