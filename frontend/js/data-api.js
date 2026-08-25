@@ -47,13 +47,23 @@
 
     try {
       const res = await fetch(url, options);
+      const contentType = res.headers.get('content-type') || '';
+
       if (!res.ok) {
         let errData = {};
-        try { errData = await res.json(); } catch(e){}
+        if (contentType.includes('application/json')) {
+          try { errData = await res.json(); } catch(e){}
+        }
         const errorMsg = errData.error || `HTTP ${res.status}: ${res.statusText}`;
         throw new Error(errorMsg);
       }
-      return await res.json();
+
+      if (contentType.includes('application/json')) {
+        return await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(`Non-JSON response from ${endpoint} (${res.status}): ${text.substring(0, 80)}`);
+      }
     } catch (err) {
       console.warn(`API Error [${endpoint}]:`, err.message);
       throw err;

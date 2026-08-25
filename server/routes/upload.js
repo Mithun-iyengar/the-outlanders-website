@@ -72,25 +72,37 @@ async function uploadSingleFileToProvider(file, folder = '') {
     }
   }
 
-  const folderDir = folder ? path.join(UPLOADS_DIR, folder) : UPLOADS_DIR;
-  if (!fs.existsSync(folderDir)) {
-    fs.mkdirSync(folderDir, { recursive: true });
+  try {
+    const folderDir = folder ? path.join(UPLOADS_DIR, folder) : UPLOADS_DIR;
+    if (!fs.existsSync(folderDir)) {
+      fs.mkdirSync(folderDir, { recursive: true });
+    }
+
+    const baseFilename = `${cleanName}-${Date.now()}${ext}`;
+    const diskPath = path.join(folderDir, baseFilename);
+    fs.writeFileSync(diskPath, file.buffer);
+
+    const relPath = folder ? `../images/uploads/${folder}/${baseFilename}` : `../images/uploads/${baseFilename}`;
+    const fullPath = folder ? `/images/uploads/${folder}/${baseFilename}` : `/images/uploads/${baseFilename}`;
+
+    return {
+      success: true,
+      url: relPath,
+      fullUrl: fullPath,
+      filename: baseFilename,
+      provider: 'disk'
+    };
+  } catch (diskErr) {
+    console.warn('Disk upload write skipped:', diskErr.message);
+    const base64Str = `data:${file.mimetype || 'image/jpeg'};base64,${file.buffer.toString('base64')}`;
+    return {
+      success: true,
+      url: base64Str,
+      fullUrl: base64Str,
+      filename: file.originalname,
+      provider: 'memory'
+    };
   }
-
-  const baseFilename = `${cleanName}-${Date.now()}${ext}`;
-  const diskPath = path.join(folderDir, baseFilename);
-  fs.writeFileSync(diskPath, file.buffer);
-
-  const relPath = folder ? `../images/uploads/${folder}/${baseFilename}` : `../images/uploads/${baseFilename}`;
-  const fullPath = folder ? `/images/uploads/${folder}/${baseFilename}` : `/images/uploads/${baseFilename}`;
-
-  return {
-    success: true,
-    url: relPath,
-    fullUrl: fullPath,
-    filename: baseFilename,
-    provider: 'disk'
-  };
 }
 
 // POST /api/upload - Single File Upload (Protected)

@@ -9,9 +9,12 @@ const TREKS_FILE = path.join(DATA_DIR, 'treks.json');
 const TRIPS_FILE = path.join(DATA_DIR, 'trips.json');
 const MEMORIES_FILE = path.join(DATA_DIR, 'memories.json');
 
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+} catch(e) {}
+
 
 const DEFAULT_SETTINGS = {
   name: "The Outlanders",
@@ -145,11 +148,10 @@ function safeWriteJsonSync(filePath, data) {
     fs.writeFileSync(tmpPath, content, 'utf8');
     fs.renameSync(tmpPath, filePath);
   } catch (e) {
-    console.error(`Error safely writing ${filePath}:`, e);
+    console.warn(`Local file store write skipped (${e.code || e.message}) - Read-only cloud environment.`);
     if (fs.existsSync(tmpPath)) {
       try { fs.unlinkSync(tmpPath); } catch(_) {}
     }
-    throw e;
   }
 }
 
