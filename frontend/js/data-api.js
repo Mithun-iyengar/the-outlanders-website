@@ -1,70 +1,64 @@
-/* DataAPI - Centralized Content Management System Layer for The Outlanders.
-   - Primary Storage: IndexedDB (Gigabyte capacity, zero quota errors)
-   - Secondary Storage: localStorage (with legacy key auto-cleanup)
-   - Provides clean getters/setters for frontend dynamic rendering and Admin CMS controls
+/* DataAPI - Centralized Content Management System Client Layer for The Outlanders.
+   - Primary Data Source: Production REST API Server (/api/*)
+   - Handles REST API calls with JWT Authorization headers for authenticated admin operations
+   - Optional local cache for offline/instant rendering performance
 */
 (function(){
   'use strict';
-  const CURRENT_KEY = 'outlanders_cms_data_v8';
-  const DB_NAME = 'OutlandersCMS_DB';
-  const DB_VERSION = 1;
-  const STORE_NAME = 'cms_data';
 
-  // --- IndexedDB Layer (Gigabyte capacity for unlimited photo uploads) ---
-  function openDB() {
-    return new Promise((resolve) => {
-      if (!window.indexedDB) {
-        resolve(null);
-        return;
+  // Base API configuration (auto-detects window.location port/hostname or fallback)
+  const API_BASE = (function(){
+    if (typeof window !== 'undefined' && window.location) {
+      const port = window.location.port;
+      if (port === '8000') {
+        return 'http://localhost:5000/api';
       }
-      try {
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
-        req.onupgradeneeded = (e) => {
-          const db = e.target.result;
-          if (!db.objectStoreNames.contains(STORE_NAME)) {
-            db.createObjectStore(STORE_NAME);
-          }
-        };
-        req.onsuccess = (e) => resolve(e.target.result);
-        req.onerror = () => resolve(null);
-      } catch (e) {
-        resolve(null);
-      }
-    });
+      return window.location.origin + '/api';
+    }
+    return '/api';
+  })();
+
+  function getAuthToken() {
+    try {
+      return sessionStorage.getItem('outlanders_auth_token') || localStorage.getItem('outlanders_auth_token') || '';
+    } catch(e) {
+      return '';
+    }
   }
 
-  async function getIDBItem(key) {
-    const db = await openDB();
-    if (!db) return null;
-    return new Promise((resolve) => {
-      try {
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.get(key);
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => resolve(null);
-      } catch (e) {
-        resolve(null);
-      }
-    });
+  function getHeaders(isJSON = true) {
+    const headers = {};
+    if (isJSON) {
+      headers['Content-Type'] = 'application/json';
+    }
+    const token = getAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
   }
 
-  async function setIDBItem(key, val) {
-    const db = await openDB();
-    if (!db) return false;
-    return new Promise((resolve) => {
-      try {
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.put(val, key);
-        req.onsuccess = () => resolve(true);
-        req.onerror = () => resolve(false);
-      } catch (e) {
-        resolve(false);
+  async function apiRequest(endpoint, options = {}) {
+    const url = `${API_BASE}${endpoint}`;
+    options.headers = Object.assign({}, getHeaders(options.isJSON !== false), options.headers || {});
+    if (options.isJSON === false) delete options.headers['Content-Type'];
+
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok) {
+        let errData = {};
+        try { errData = await res.json(); } catch(e){}
+        const errorMsg = errData.error || `HTTP ${res.status}: ${res.statusText}`;
+        throw new Error(errorMsg);
       }
-    });
+      return await res.json();
+    } catch (err) {
+      console.warn(`API Error [${endpoint}]:`, err.message);
+      throw err;
+    }
   }
 
+  // === DEFAULT FALLBACK DATA ===
   const DEFAULT_SETTINGS = {
     name: "The Outlanders",
     logo: "../images/logo/outlanders-logo.png",
@@ -140,241 +134,68 @@
     }
   };
 
-  const DEFAULT_MEMORIES = [
-    { id: "mem-1", image: "../images/treks/kudremukha/cover.jpg", category: "Western Ghats", order: 1, created_at: 1770000000000, published: true },
-    { id: "mem-2", image: "../images/hero/scroll-back.jpg", category: "Highland Trails", order: 2, created_at: 1770000100000, published: true },
-    { id: "mem-3", image: "../images/trips/roadtrip-card.jpg", category: "Road Trips", order: 3, created_at: 1770000200000, published: true },
-    { id: "mem-4", image: "../images/intro/intro.jpg", category: "Camping", order: 4, created_at: 1770000300000, published: true },
-    { id: "mem-5", image: "../images/trips/gokarna/cover.jpg", category: "Weekend Getaways", order: 5, created_at: 1770000400000, published: true },
-    { id: "mem-6", image: "../images/trips/camping/cover.jpg", category: "Camping", order: 6, created_at: 1770000500000, published: true },
-    { id: "mem-7", image: "../images/trips/roadtrip/cover.jpg", category: "Road Trips", order: 7, created_at: 1770000600000, published: true },
-    { id: "mem-8", image: "../images/treks/netravathi/cover.jpg", category: "Western Ghats", order: 8, created_at: 1770000700000, published: true },
-    { id: "mem-9", image: "../images/treks/kurinjal/cover.jpg", category: "Western Ghats", order: 9, created_at: 1770000800000, published: true },
-    { id: "mem-10", image: "../images/treks/bandaje/cover.jpg", category: "Western Ghats", order: 10, created_at: 1770000900000, published: true }
-  ];
-
-  const DEFAULT_ABOUT_HTML = `
-    <div class="row g-4 align-items-center">
-      <div class="col-lg-8">
-        <h2 class="h3 text-white fw-bold mb-3">OUR STORY & JOURNEY</h2>
-        <p class="lead mb-4" style="color: var(--text-main); font-size: 1.12rem; line-height: 1.7;">
-          We craft safe, memorable, and environmentally responsible experiences that connect adventure enthusiasts with the wild beauty of nature.
-        </p>
-        <p class="mb-4" style="color: var(--text-main); font-size: 1.02rem; line-height: 1.7;">
-          As a registered adventure and travel company, <strong>The Outlanders</strong> has been creating experiences across diverse destinations, from Western Ghats treks and weekend getaways to customized trips and outdoor adventures.
-        </p>
-        <p class="mb-4" style="color: var(--text-main); font-size: 1.02rem; line-height: 1.7;">
-          We also conduct specially planned trips and adventure programs for <strong>schools, colleges, and corporate groups</strong>, combining exploration, teamwork, learning, and unforgettable memories.
-        </p>
-        <p class="mb-4" style="color: var(--text-main); font-size: 1.02rem; line-height: 1.7;">
-          With institutions such as <strong>BRV and PES University, Bengaluru</strong> among our recurring clients, we continue to build lasting relationships through well-organized and engaging experiences.
-        </p>
-        <div class="p-3 rounded-3 border" style="background: rgba(232, 106, 51, 0.12); border-color: rgba(232, 106, 51, 0.3) !important;">
-          <p class="mb-0 fw-bold" style="color: #ffffff; font-size: 1.05rem; line-height: 1.6;">
-            With <span style="color: var(--accent); font-size: 1.2rem;">8,000+ happy customers</span> and counting, our journey is driven by one simple belief — every adventure should be safe, meaningful, and worth remembering.
-          </p>
-        </div>
-      </div>
-      <div class="col-lg-4 text-center">
-        <div class="p-4 rounded-3 border text-center h-100 d-flex flex-column justify-content-center" style="background: #0B0F0E; border-color: var(--card-border) !important;">
-          <i class="bi bi-people-fill display-3 mb-3" style="color: var(--accent);"></i>
-          <h3 class="display-5 fw-bold text-white mb-1">8,000+</h3>
-          <p class="text-uppercase small fw-bold mb-3" style="color: var(--sand); letter-spacing: 0.1em;">Happy Adventurers</p>
-          <hr class="my-3 border-secondary opacity-25">
-          <div class="small text-start" style="color: var(--text-main);">
-            <div class="mb-2"><i class="bi bi-building-check me-2" style="color: var(--accent);"></i> <strong>Corporate & Campus Trips</strong></div>
-            <div class="mb-2"><i class="bi bi-mortarboard-fill me-2" style="color: var(--accent);"></i> <strong>PES University & BRV Partner</strong></div>
-            <div><i class="bi bi-shield-check me-2" style="color: var(--accent);"></i> <strong>Registered Travel Brand</strong></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  async function findExistingState(){
+  async function loadInitial() {
     try {
-      // 1. Try IndexedDB FIRST! (Zero quota limits)
-      const idbState = await getIDBItem(CURRENT_KEY);
-      if(idbState && (idbState.treks || idbState.trips || idbState.homepage)) {
-        return idbState;
-      }
-
-      // 2. Try localStorage CURRENT_KEY
-      const currentRaw = localStorage.getItem(CURRENT_KEY);
-      if(currentRaw){
-        try{
-          const parsed = JSON.parse(currentRaw);
-          if(parsed && (parsed.treks || parsed.trips || parsed.homepage)){
-            await setIDBItem(CURRENT_KEY, parsed);
-            return parsed;
-          }
-        }catch(e){}
-      }
-
-      // 3. Fallback from legacy keys
-      const legacyKeys = ['outlanders_cms_data_v8', 'outlanders_cms_data_v7', 'outlanders_cms_data_v6', 'outlanders_cms_data_v5', 'outlanders_cms_data'];
-      for(const k of legacyKeys){
-        const raw = localStorage.getItem(k);
-        if(raw){
-          try{
-            const parsed = JSON.parse(raw);
-            if(parsed && (parsed.treks || parsed.trips || parsed.homepage)){
-              await setIDBItem(CURRENT_KEY, parsed);
-              return parsed;
-            }
-          }catch(e){}
-        }
-      }
-    } catch(e){}
-    return null;
-  }
-
-  async function loadInitial(){
-    const existing = await findExistingState();
-    if(existing){
-      if(!existing.memories || !Array.isArray(existing.memories)){
-        existing.memories = JSON.parse(JSON.stringify(DEFAULT_MEMORIES));
-      }
-      await setIDBItem(CURRENT_KEY, existing);
-      try { localStorage.setItem(CURRENT_KEY, JSON.stringify(existing)); } catch(e){}
-      return existing;
-    }
-
-    try{
-      const [treksRes, tripsRes] = await Promise.all([fetch('../data/treks.json'), fetch('../data/trips.json')]);
-      const treksJson = treksRes.ok ? await treksRes.json() : [];
-      const tripsJson = tripsRes.ok ? await tripsRes.json() : [];
-      const treks = Array.isArray(treksJson) ? treksJson : (treksJson.treks || treksJson);
-      const trips = Array.isArray(tripsJson) ? tripsJson : (tripsJson.trips || tripsJson);
-      
-      const state = {
-        settings: Object.assign({}, DEFAULT_SETTINGS),
-        homepage: JSON.parse(JSON.stringify(DEFAULT_HOMEPAGE)),
-        categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
-        about: DEFAULT_ABOUT_HTML,
-        treks: treks || [],
-        trips: trips || [],
-        memories: JSON.parse(JSON.stringify(DEFAULT_MEMORIES)),
-        media: [
-          { id: "m-1", name: "scroll-back.jpg", path: "../images/hero/scroll-back.jpg", usedIn: "Hero & Final CTA Background" },
-          { id: "m-2", name: "roadtrip-card.jpg", path: "../images/trips/roadtrip-card.jpg", usedIn: "Road Trips Experience Card" },
-          { id: "m-3", name: "kudremukha-cover.jpg", path: "../images/treks/kudremukha/cover.jpg", usedIn: "Kudremukha Trek Cover" },
-          { id: "m-4", name: "intro.jpg", path: "../images/intro/intro.jpg", usedIn: "About & Adventure Card" }
-        ]
-      };
-      await setIDBItem(CURRENT_KEY, state);
-      try { localStorage.setItem(CURRENT_KEY, JSON.stringify(state)); } catch(e){}
-      return state;
-    }catch(err){
-      console.error('DataAPI init error', err);
-      const emptyState = {
-        settings: DEFAULT_SETTINGS,
-        homepage: DEFAULT_HOMEPAGE,
-        categories: DEFAULT_CATEGORIES,
-        about: DEFAULT_ABOUT_HTML,
-        treks: [],
-        trips: [],
-        memories: DEFAULT_MEMORIES,
-        media: []
-      };
-      await setIDBItem(CURRENT_KEY, emptyState);
-      try { localStorage.setItem(CURRENT_KEY, JSON.stringify(emptyState)); } catch(e){}
-      return emptyState;
-    }
-  }
-
-  async function getState(){
-    const existing = await findExistingState();
-    if(existing){
-      if(!existing.memories || !Array.isArray(existing.memories)){
-        existing.memories = JSON.parse(JSON.stringify(DEFAULT_MEMORIES));
-      }
-      return existing;
-    }
-    return await loadInitial();
-  }
-
-  async function saveState(state){
-    // 1. Save to IndexedDB (Gigabyte capacity for unlimited photos!)
-    await setIDBItem(CURRENT_KEY, state);
-
-    // 2. Clean up old legacy keys to free space in localStorage
-    ['outlanders_cms_data_v7', 'outlanders_cms_data_v6', 'outlanders_cms_data_v5', 'outlanders_cms_data'].forEach(k => {
-      try { localStorage.removeItem(k); } catch(e){}
-    });
-
-    // 3. Save to localStorage as secondary cache
-    try {
-      localStorage.setItem(CURRENT_KEY, JSON.stringify(state));
+      const [treks, trips] = await Promise.all([
+        getTreks().catch(() => []),
+        getTrips().catch(() => [])
+      ]);
+      return { treks, trips };
     } catch(e) {
-      console.warn('LocalStorage full, state saved cleanly to IndexedDB.');
+      return { treks: [], trips: [] };
     }
-
-    window.dispatchEvent(new CustomEvent('cms-data-updated', { detail: state }));
-    return state;
   }
 
-  window.addEventListener('storage', (e) => {
-    if(e.key && e.key.startsWith('outlanders_cms_data')){
-      window.dispatchEvent(new CustomEvent('cms-data-updated'));
-    }
-  });
-
-  async function resetToDefaults(){
+  // === SITE SETTINGS ===
+  async function getSiteSettings() {
     try {
-      const db = await openDB();
-      if (db) {
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        tx.objectStore(STORE_NAME).clear();
-      }
-      for(let i = localStorage.length - 1; i >= 0; i--){
-        const k = localStorage.key(i);
-        if(k && k.startsWith('outlanders_cms_data')) localStorage.removeItem(k);
-      }
-    } catch(e){}
-    return await loadInitial();
+      return await apiRequest('/settings');
+    } catch (e) {
+      return DEFAULT_SETTINGS;
+    }
   }
 
-  // Site Settings
-  async function getSiteSettings(){
-    const s = await getState();
-    return Object.assign({}, DEFAULT_SETTINGS, s.settings || {});
+  async function updateSiteSettings(newSettings) {
+    const updated = await apiRequest('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(newSettings)
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return updated;
   }
 
-  async function updateSiteSettings(newSettings){
-    const state = await getState();
-    state.settings = Object.assign({}, DEFAULT_SETTINGS, state.settings || {}, newSettings);
-    await saveState(state);
-    return state.settings;
+  // === HOMEPAGE CONTENT ===
+  async function getHomepageContent() {
+    try {
+      return await apiRequest('/homepage');
+    } catch (e) {
+      return DEFAULT_HOMEPAGE;
+    }
   }
 
-  // Homepage Content
-  async function getHomepageContent(){
-    const s = await getState();
-    return s.homepage || DEFAULT_HOMEPAGE;
+  async function updateHomepageContent(newHomepage) {
+    const updated = await apiRequest('/homepage', {
+      method: 'PUT',
+      body: JSON.stringify(newHomepage)
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return updated;
   }
 
-  async function updateHomepageContent(newHomepage){
-    const state = await getState();
-    state.homepage = Object.assign({}, DEFAULT_HOMEPAGE, state.homepage || {}, newHomepage);
-    await saveState(state);
-    return state.homepage;
-  }
-
-  async function getHeroImage(){
+  async function getHeroImage() {
     const hp = await getHomepageContent();
     return (hp.hero && hp.hero.bgImage) || "../images/hero/scroll-back.jpg";
   }
 
-  async function updateHeroImage(url){
+  async function updateHeroImage(url) {
     const hp = await getHomepageContent();
-    if(!hp.hero) hp.hero = {};
+    if (!hp.hero) hp.hero = {};
     hp.hero.bgImage = url;
     await updateHomepageContent(hp);
     return url;
   }
 
-  async function getCategoryImages(){
+  async function getCategoryImages() {
     const hp = await getHomepageContent();
     const cards = (hp.discover && hp.discover.cards) || [];
     return {
@@ -384,185 +205,202 @@
     };
   }
 
-  async function updateCategoryImages(obj){
+  async function updateCategoryImages(obj) {
     const hp = await getHomepageContent();
-    if(!hp.discover) hp.discover = { cards: [] };
-    if(hp.discover.cards.length >= 3){
-      if(obj.treks) hp.discover.cards[0].image = obj.treks;
-      if(obj.roadtrips) hp.discover.cards[1].image = obj.roadtrips;
-      if(obj.adventure) hp.discover.cards[2].image = obj.adventure;
+    if (!hp.discover) hp.discover = { cards: [] };
+    if (hp.discover.cards.length >= 3) {
+      if (obj.treks) hp.discover.cards[0].image = obj.treks;
+      if (obj.roadtrips) hp.discover.cards[1].image = obj.roadtrips;
+      if (obj.adventure) hp.discover.cards[2].image = obj.adventure;
     }
     await updateHomepageContent(hp);
     return obj;
   }
 
-  // Categories CRUD
-  async function getCategories(){
-    const s = await getState();
-    return s.categories || DEFAULT_CATEGORIES;
+  // === CATEGORIES CRUD ===
+  async function getCategories() {
+    try {
+      return await apiRequest('/categories');
+    } catch (e) {
+      return DEFAULT_CATEGORIES;
+    }
   }
 
-  async function createCategory(cat){
-    const state = await getState();
-    state.categories = state.categories || [];
-    cat.id = cat.id || 'cat-' + Date.now();
-    state.categories.push(cat);
-    await saveState(state);
-    return cat;
+  async function createCategory(cat) {
+    const saved = await apiRequest('/categories', {
+      method: 'POST',
+      body: JSON.stringify(cat)
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return saved;
   }
 
-  async function updateCategory(id, updated){
-    const state = await getState();
-    state.categories = state.categories || [];
-    const idx = state.categories.findIndex(c => c.id === id || c.slug === id);
-    if(idx === -1) throw new Error('Category not found');
-    state.categories[idx] = Object.assign({}, state.categories[idx], updated);
-    await saveState(state);
-    return state.categories[idx];
+  async function updateCategory(id, updated) {
+    const saved = await apiRequest(`/categories/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(updated)
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return saved;
   }
 
-  async function deleteCategory(id){
-    const state = await getState();
-    state.categories = (state.categories || []).filter(c => c.id !== id && c.slug !== id);
-    await saveState(state);
+  async function deleteCategory(id) {
+    await apiRequest(`/categories/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
     return true;
   }
 
-  // Treks CRUD
-  async function getTreks(){
-    const s = await getState();
-    return s.treks || [];
+  // === TREKS CRUD ===
+  async function getTreks(category) {
+    const query = category ? `?category=${encodeURIComponent(category)}` : '';
+    return await apiRequest(`/treks${query}`);
   }
 
-  async function getTrekById(id){
-    const treks = await getTreks();
-    return treks.find(t => t.id === id || t.slug === id) || null;
+  async function getTrekById(id) {
+    return await apiRequest(`/treks/${encodeURIComponent(id)}`);
   }
 
-  async function createTrek(trek){
-    const state = await getState();
-    state.treks = state.treks || [];
-    state.treks.unshift(trek);
-    await saveState(state);
-    return trek;
+  async function createTrek(trek) {
+    const saved = await apiRequest('/treks', {
+      method: 'POST',
+      body: JSON.stringify(trek)
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return saved;
   }
 
-  async function updateTrek(id, updated){
-    const state = await getState();
-    state.treks = state.treks || [];
-    const idx = state.treks.findIndex(t => t.id === id || t.slug === id);
-    if(idx === -1) throw new Error('Trek not found');
-    state.treks[idx] = Object.assign({}, state.treks[idx], updated);
-    await saveState(state);
-    return state.treks[idx];
+  async function updateTrek(id, updated) {
+    const saved = await apiRequest(`/treks/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(updated)
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return saved;
   }
 
-  async function deleteTrek(id){
-    const state = await getState();
-    state.treks = (state.treks || []).filter(t => t.id !== id && t.slug !== id);
-    await saveState(state);
+  async function deleteTrek(id) {
+    await apiRequest(`/treks/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
     return true;
   }
 
-  async function duplicateTrek(id, newId){
-    const trek = await getTrekById(id);
-    if(!trek) throw new Error('Not found');
-    const copy = JSON.parse(JSON.stringify(trek));
-    copy.id = newId;
-    copy.slug = newId;
-    copy.published = false;
-    copy.name = copy.name + ' (Copy)';
-    return await createTrek(copy);
+  async function duplicateTrek(id, newId) {
+    const saved = await apiRequest(`/treks/duplicate/${encodeURIComponent(id)}`, {
+      method: 'POST',
+      body: JSON.stringify({ newId })
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return saved;
   }
 
-  // Trips CRUD
-  async function getTrips(){
-    const s = await getState();
-    return s.trips || [];
+  // === TRIPS CRUD ===
+  async function getTrips() {
+    return await apiRequest('/trips');
   }
 
-  async function getTripById(id){
-    const trips = await getTrips();
-    return trips.find(t => t.id === id || t.slug === id) || null;
+  async function getTripById(id) {
+    return await apiRequest(`/trips/${encodeURIComponent(id)}`);
   }
 
-  async function createTrip(trip){
-    const state = await getState();
-    state.trips = state.trips || [];
-    state.trips.unshift(trip);
-    await saveState(state);
-    return trip;
+  async function createTrip(trip) {
+    const saved = await apiRequest('/trips', {
+      method: 'POST',
+      body: JSON.stringify(trip)
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return saved;
   }
 
-  async function updateTrip(id, updated){
-    const state = await getState();
-    state.trips = state.trips || [];
-    const idx = state.trips.findIndex(t => t.id === id || t.slug === id);
-    if(idx === -1) throw new Error('Trip not found');
-    state.trips[idx] = Object.assign({}, state.trips[idx], updated);
-    await saveState(state);
-    return state.trips[idx];
+  async function updateTrip(id, updated) {
+    const saved = await apiRequest(`/trips/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(updated)
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return saved;
   }
 
-  async function deleteTrip(id){
-    const state = await getState();
-    state.trips = (state.trips || []).filter(t => t.id !== id && t.slug !== id);
-    await saveState(state);
+  async function deleteTrip(id) {
+    await apiRequest(`/trips/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
     return true;
   }
 
-  // Memories CRUD
-  async function getMemories(){
-    const s = await getState();
-    return s.memories || DEFAULT_MEMORIES;
+  // === MEMORIES CRUD ===
+  async function getMemories() {
+    return await apiRequest('/memories');
   }
 
-  async function updateMemories(memoriesList){
-    const state = await getState();
-    state.memories = memoriesList || [];
-    await saveState(state);
-    return state.memories;
+  async function updateMemories(memoriesList) {
+    const saved = await apiRequest('/memories', {
+      method: 'PUT',
+      body: JSON.stringify(memoriesList)
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return saved;
   }
 
-  // About Content
-  async function getAbout(){
-    const s = await getState();
-    return s.about || DEFAULT_ABOUT_HTML;
+  // === ABOUT US CONTENT ===
+  async function getAbout() {
+    try {
+      const res = await apiRequest('/about');
+      return res.html || null;
+    } catch(e) {
+      return null;
+    }
   }
 
-  async function updateAbout(html){
-    const state = await getState();
-    state.about = html;
-    await saveState(state);
-    return state.about;
+  async function updateAbout(html) {
+    await apiRequest('/about', {
+      method: 'PUT',
+      body: JSON.stringify({ html })
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return html;
   }
 
-  // Media Library
-  async function getMediaList(){
-    const s = await getState();
-    return s.media || [];
+  // === MEDIA LIBRARY ===
+  async function getMediaList() {
+    return await apiRequest('/media');
   }
 
-  async function addMedia(item){
-    const state = await getState();
-    state.media = state.media || [];
-    item.id = item.id || 'm-' + Date.now();
-    state.media.unshift(item);
-    await saveState(state);
-    return item;
+  async function addMedia(item) {
+    const saved = await apiRequest('/media', {
+      method: 'POST',
+      body: JSON.stringify(item)
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
+    return saved;
   }
 
-  async function deleteMedia(id){
-    const state = await getState();
-    state.media = (state.media || []).filter(m => m.id !== id);
-    await saveState(state);
+  async function deleteMedia(id) {
+    await apiRequest(`/media/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+    window.dispatchEvent(new CustomEvent('cms-data-updated'));
     return true;
   }
 
-  // Expose API globally
+  // === FILE UPLOAD HELPER ===
+  async function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return await apiRequest('/upload', {
+      method: 'POST',
+      isJSON: false,
+      body: formData
+    });
+  }
+
+  // Expose DataAPI globally
   window.DataAPI = {
     init: loadInitial,
-    resetToDefaults,
     getSiteSettings, updateSiteSettings,
     getHomepageContent, updateHomepageContent,
     getHeroImage, updateHeroImage,
@@ -572,7 +410,8 @@
     getTrips, getTripById, createTrip, updateTrip, deleteTrip,
     getMemories, updateMemories,
     getAbout, updateAbout,
-    getMediaList, addMedia, deleteMedia
+    getMediaList, addMedia, deleteMedia,
+    uploadFile
   };
 
   loadInitial();

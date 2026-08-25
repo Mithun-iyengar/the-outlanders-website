@@ -1,58 +1,69 @@
-// admin.js - Front-end auth plumbing with Web Crypto API SHA-256 Encrypted Passwords
+// admin.js - Production Server-Side Authentication Plumbing with JWT
 (function(){
   'use strict';
 
-  // Default hashed password for 'outlanders2026' in SHA-256
-  const DEFAULT_USER = 'admin';
-  const DEFAULT_PASS_HASH = '6c83664d4b1d64703a893c5d6cbb1816e885d56b461877685651c68e0fb3035a'; // SHA-256 of 'outlanders2026'
-
-  // Utility: SHA-256 Password Hash using Web Crypto API
-  async function hashPassword(str){
-    if(!str) return '';
+  function getAuthToken(){
     try {
-      const msgBuffer = new TextEncoder().encode(str);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return sessionStorage.getItem('outlanders_auth_token') || localStorage.getItem('outlanders_auth_token') || '';
     } catch(e) {
-      // Basic fallback
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = (hash << 5) - hash + str.charCodeAt(i);
-        hash |= 0;
-      }
-      return 'fallback-' + Math.abs(hash);
+      return '';
     }
   }
 
-  function getStoredAdminCreds(){
-    try {
-      const raw = localStorage.getItem('outlanders_admin_creds');
-      if(raw){
-        const parsed = JSON.parse(raw);
-        if(parsed && parsed.user && parsed.passHash) return parsed;
-      }
-    } catch(e){}
-    return { user: DEFAULT_USER, passHash: DEFAULT_PASS_HASH };
-  }
-
-  function setStoredAdminCreds(user, passHash){
-    try {
-      localStorage.setItem('outlanders_admin_creds', JSON.stringify({ user, passHash }));
-    } catch(e){}
-  }
-
   function isLoggedIn(){
-    return sessionStorage.getItem('outlanders_admin_logged') === '1';
+    return Boolean(getAuthToken()) || sessionStorage.getItem('outlanders_admin_logged') === '1';
   }
 
   function requireLogin(){
-    if(!isLoggedIn()) location.href = 'index.html';
+    if(!isLoggedIn()){
+      location.href = 'index.html';
+    }
+  }
+
+  async function loginAdmin(username, password){
+    const apiBase = window.location.port === '8000' ? 'http://localhost:5000/api' : '/api';
+    const res = await fetch(`${apiBase}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+    if(!res.ok || !data.success){
+      throw new Error(data.error || 'Invalid credentials');
+    }
+
+    if(data.token){
+      sessionStorage.setItem('outlanders_auth_token', data.token);
+      localStorage.setItem('outlanders_auth_token', data.token);
+      sessionStorage.setItem('outlanders_admin_logged', '1');
+    }
+    return data;
+  }
+
+  async function changeAdminPassword(currentPassword, newPassword){
+    const apiBase = window.location.port === '8000' ? 'http://localhost:5000/api' : '/api';
+    const token = getAuthToken();
+    const res = await fetch(`${apiBase}/auth/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+
+    const data = await res.json();
+    if(!res.ok){
+      throw new Error(data.error || 'Failed to change password');
+    }
+    return data;
   }
 
   document.addEventListener('DOMContentLoaded', ()=>{
     const loginForm = document.getElementById('loginForm');
     const loginAlert = document.getElementById('loginAlert');
+    const loginBtn = document.getElementById('loginBtn');
 
     if(loginForm){
       loginForm.addEventListener('submit', async function(e){
@@ -66,17 +77,24 @@
           return;
         }
 
-        const creds = getStoredAdminCreds();
-        const inputHash = await hashPassword(pInput);
+        if(loginBtn){
+          loginBtn.disabled = true;
+          loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Logging in...';
+        }
 
-        if(uInput.toLowerCase() === creds.user.toLowerCase() && (inputHash === creds.passHash || pInput === 'outlanders2026')){
-          sessionStorage.setItem('outlanders_admin_logged','1');
+        try {
+          await loginAdmin(uInput, pInput);
           location.href = 'dashboard.html';
-        } else {
+        } catch(err) {
           if(loginAlert){
-            loginAlert.innerHTML = '<div class="alert alert-danger alert-dismissible fade show fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i> Invalid Username or Password. Please try again. <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+            loginAlert.innerHTML = `<div class="alert alert-danger alert-dismissible fade show fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i> ${err.message} <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
           } else {
-            alert('Invalid Username or Password.');
+            alert(err.message);
+          }
+        } finally {
+          if(loginBtn){
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = 'LOGIN';
           }
         }
       });
@@ -87,6 +105,8 @@
       if(link){
         link.addEventListener('click', function(e){
           e.preventDefault();
+          sessionStorage.removeItem('outlanders_auth_token');
+          localStorage.removeItem('outlanders_auth_token');
           sessionStorage.removeItem('outlanders_admin_logged');
           location.href = 'index.html';
         });
@@ -96,7 +116,7 @@
 
   window.isLoggedIn = isLoggedIn;
   window.requireLogin = requireLogin;
-  window.hashPassword = hashPassword;
-  window.getStoredAdminCreds = getStoredAdminCreds;
-  window.setStoredAdminCreds = setStoredAdminCreds;
+  window.loginAdmin = loginAdmin;
+  window.changeAdminPassword = changeAdminPassword;
+  window.getAuthToken = getAuthToken;
 })();

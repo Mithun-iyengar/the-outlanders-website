@@ -1,0 +1,342 @@
+{
+  "settings": {
+    "name": "The Outlanders",
+    "logo": "../images/logo/outlanders-logo.png",
+    "whatsapp": "917795167667",
+    "phone": "+91 77951 67667",
+    "instagram": "https://www.instagram.com/trek_with_theoutlanders/",
+    "communityUrl": "https://chat.whatsapp.com/GsFyASKtUKoGlFV2lVsAyM",
+    "copyright": "© 2026 The Outlanders. All Rights Reserved.",
+    "seoTitle": "THE OUTLANDERS — Explore Beyond The Ordinary",
+    "seoDescription": "Discover handcrafted treks across the Western Ghats with local support, safety, and a vibrant community of adventurers."
+  },
+  "categories": [
+    {
+      "id": "cat-1",
+      "name": "Western Ghats",
+      "slug": "Western Ghats",
+      "description": "Lush mountain trails across Karnataka and Kerala",
+      "image": "../images/treks/kudremukha/cover.jpg",
+      "order": 1,
+      "published": true
+    },
+    {
+      "id": "cat-2",
+      "name": "Weekend Trips",
+      "slug": "Weekend",
+      "description": "Quick 2-day escapes away from the city",
+      "image": "../images/trips/roadtrip-card.jpg",
+      "order": 2,
+      "published": true
+    },
+    {
+      "id": "cat-3",
+      "name": "Camping",
+      "slug": "Camping",
+      "description": "Wilderness camping and starlight outdoor stays",
+      "image": "../images/intro/intro.jpg",
+      "order": 3,
+      "published": true
+    },
+    {
+      "id": "cat-4",
+      "name": "Road Trips",
+      "slug": "Road Trips",
+      "description": "Scenic mountain drives and coastal loops",
+      "image": "../images/trips/roadtrip-card.jpg",
+      "order": 4,
+      "published": true
+    },
+    {
+      "id": "cat-5",
+      "name": "Adventure Experiences",
+      "slug": "Adventure",
+      "description": "High thrill outdoor experiences and river trails",
+      "image": "../images/intro/intro.jpg",
+      "order": 5,
+      "published": true
+    }
+  ],
+  "homepage": {
+    "hero": {
+      "eyebrow": "UNFORGETTABLE ADVENTURES",
+      "title": "EXPLORE BEYOND THE ORDINARY",
+      "sub": "Discover breathtaking trails, hidden destinations, unforgettable journeys, and the wild beauty of the Western Ghats with The Outlanders.",
+      "btn1Text": "EXPLORE TREKS",
+      "btn1Link": "treks.html",
+      "btn2Text": "UPCOMING TRIPS",
+      "btn2Link": "trips.html",
+      "bgImage": "../images/hero/scroll-back.jpg"
+    },
+    "intro": {
+      "eyebrow": "OUR PHILOSOPHY",
+      "title": "NOT JUST A TRIP. A STORY TO REMEMBER.",
+      "lead": "The Outlanders brings together people who love mountains, trails, nature, adventure, and unforgettable experiences.",
+      "desc": "We design handcrafted treks across the Western Ghats with careful planning, local support, safety guidelines, and a genuine spirit of camaraderie.",
+      "btnText": "Learn More About Us",
+      "btnLink": "about.html",
+      "image": "../images/intro/intro.jpg"
+    },
+    "discover": {
+      "eyebrow": "FIND YOUR KIND OF WILD",
+      "title": "DISCOVER BY EXPERIENCE",
+      "sub": "Explore the Western Ghats through trails, road journeys, and unforgettable outdoor experiences.",
+      "cards": [
+        {
+          "id": "card-1",
+          "title": "WESTERN GHATS TREKS",
+          "action": "EXPLORE TRAILS ↗",
+          "image": "../images/treks/kudremukha/cover.jpg",
+          "link": "treks.html?category=Western%20Ghats",
+          "order": 1,
+          "published": true
+        },
+        {
+          "id": "card-2",
+          "title": "ROAD TRIPS",
+          "action": "HIT THE ROAD ↗",
+          "image": "../images/trips/roadtrip-card.jpg",
+          "link": "trips.html",
+          "order": 2,
+          "published": true
+        },
+        {
+          "id": "card-3",
+          "title": "ADVENTURE EXPERIENCES",
+          "action": "LIVE THE ADVENTURE ↗",
+          "image": "../images/intro/intro.jpg",
+          "link": "treks.html",
+          "order": 3,
+          "published": true
+        }
+      ]
+    },
+    "whyTrek": {
+      "eyebrow": "THE OUTLANDERS DIFFERENCE",
+      "title": "WHY TREK WITH US",
+      "features": [
+        {
+          "id": "f-1",
+          "icon": "bi-map",
+          "title": "Curated Adventures",
+          "desc": "Carefully planned experiences and handpicked trails crafted for true nature lovers.",
+          "order": 1,
+          "published": true
+        },
+        {
+          "id": "f-2",
+          "icon": "bi-people",
+          "title": "Like-Minded Community",
+          "desc": "Meet fellow enthusiasts who share your passion for travel, mountains, and outdoors.",
+          "order": 2,
+          "published": true
+        },
+        {
+          "id": "f-3",
+          "icon": "bi-camera",
+          "title": "Memories Beyond Peaks",
+          "desc": "Every trip is crafted to leave you with stories, friendships, and lifelong memories.",
+          "order": 3,
+          "published": true
+        },
+        {
+          "id": "f-4",
+          "icon": "bi-shield-check",
+          "title": "Safe & Organized",
+          "desc": "Experienced leads, safety protocols, local support, and structured coordination.",
+          "order": 4,
+          "published": true
+        }
+      ]
+    },
+    "community": {
+      "eyebrow": "CONNECT WITH US",
+      "title": "JOIN THE OUTLANDERS",
+      "desc": "Stay connected with fellow adventurers, discover upcoming treks, and get the latest updates from The Outlanders community.",
+      "btnText": "JOIN OUR WHATSAPP COMMUNITY"
+    },
+    "finalCta": {
+      "title": "YOUR NEXT ADVENTURE IS WAITING.",
+      "desc": "Step out of your comfort zone and into the wild.",
+      "btnText": "EXPLORE UPCOMING TREKS",
+      "btnLink": "treks.html",
+      "bgImage": "../images/hero/scroll-back.jpg"
+    }
+  },
+  "memories": [
+    {
+      "id": "mem-1",
+      "image": "../images/treks/kudremukha/cover.jpg",
+      "category": "Western Ghats",
+      "order": 1,
+      "created_at": 1770000000000,
+      "published": true
+    },
+    {
+      "id": "mem-2",
+      "image": "../images/hero/scroll-back.jpg",
+      "category": "Highland Trails",
+      "order": 2,
+      "created_at": 1770000100000,
+      "published": true
+    },
+    {
+      "id": "mem-3",
+      "image": "../images/trips/roadtrip-card.jpg",
+      "category": "Road Trips",
+      "order": 3,
+      "created_at": 1770000200000,
+      "published": true
+    },
+    {
+      "id": "mem-4",
+      "image": "../images/intro/intro.jpg",
+      "category": "Camping",
+      "order": 4,
+      "created_at": 1770000300000,
+      "published": true
+    },
+    {
+      "id": "mem-5",
+      "image": "../images/trips/gokarna/cover.jpg",
+      "category": "Weekend Getaways",
+      "order": 5,
+      "created_at": 1770000400000,
+      "published": true
+    },
+    {
+      "id": "mem-6",
+      "image": "../images/trips/camping/cover.jpg",
+      "category": "Camping",
+      "order": 6,
+      "created_at": 1770000500000,
+      "published": true
+    },
+    {
+      "id": "mem-7",
+      "image": "../images/trips/roadtrip/cover.jpg",
+      "category": "Road Trips",
+      "order": 7,
+      "created_at": 1770000600000,
+      "published": true
+    },
+    {
+      "id": "mem-8",
+      "image": "../images/treks/netravathi/cover.jpg",
+      "category": "Western Ghats",
+      "order": 8,
+      "created_at": 1770000700000,
+      "published": true
+    }
+  ],
+  "treks": [
+    {
+      "id": "kudremukha",
+      "name": "Kudremukha Trek",
+      "category": "Western Ghats",
+      "location": "Chikkamagaluru, Karnataka",
+      "date": "Every Friday Departure",
+      "duration": "2 Days / 1 Night",
+      "difficulty": "Moderate",
+      "price": 1999,
+      "image": "../images/treks/kudremukha/cover.jpg",
+      "coverImage": "../images/treks/kudremukha/cover.jpg",
+      "featuredImage": "../images/treks/kudremukha/1.jpg.png",
+      "shortDescription": "A breathtaking trek through lush grasslands, endemic forests, and panoramic viewpoints of the Western Ghats.",
+      "featured": true,
+      "published": true,
+      "itinerary": "../assets/documents/Kudremukha.pdf"
+    },
+    {
+      "id": "netravathi",
+      "name": "Netravathi Trek",
+      "category": "Western Ghats",
+      "location": "Goa (Netravathi Wildlife Sanctuary)",
+      "date": "Every Friday Departure",
+      "duration": "2 Days",
+      "difficulty": "Easy",
+      "price": 1499,
+      "image": "../images/treks/netravathi/cover.jpg",
+      "coverImage": "../images/treks/netravathi/cover.jpg",
+      "featuredImage": "../images/treks/netravathi/1.jpg.png",
+      "shortDescription": "Explore dense evergreen forests, rivers, and hidden waterfalls in a remote stretch of the Western Ghats.",
+      "featured": true,
+      "published": true,
+      "itinerary": "../assets/documents/Nethravathi.pdf"
+    },
+    {
+      "id": "kurinjal",
+      "name": "Kurinjal Trek",
+      "category": "Western Ghats",
+      "location": "Kodagu, Karnataka",
+      "date": "Every Friday Departure",
+      "duration": "3 Days / 2 Nights",
+      "difficulty": "Challenging",
+      "price": 3499,
+      "image": "../images/treks/kurinjal/cover.jpg",
+      "coverImage": "../images/treks/kurinjal/cover.jpg",
+      "shortDescription": "A route of waterfalls, narrow ridgelines and sweeping views — designed for experienced trekkers who want a true wilderness feel.",
+      "featured": false,
+      "published": true,
+      "itinerary": "../assets/documents/Kurinjal.pdf"
+    },
+    {
+      "id": "bandaje-arbi",
+      "name": "Bandaje Arbi Trek",
+      "category": "Western Ghats",
+      "location": "Karnataka — Bandaje Arbi",
+      "date": "Every Friday Departure",
+      "duration": "2 Days",
+      "difficulty": "Moderate",
+      "price": 1799,
+      "image": "../images/treks/bandaje/cover.jpg",
+      "coverImage": "../images/treks/bandaje/cover.jpg",
+      "shortDescription": "A hidden valley trek with river crossings, dense forest and spectacular ridgelines — perfect for nature lovers.",
+      "featured": true,
+      "published": true,
+      "itinerary": "../assets/documents/Bandaje fallse.pdf"
+    }
+  ],
+  "trips": [
+    {
+      "id": "gokarna-getaway",
+      "name": "Gokarna Getaway",
+      "category": "Weekend Getaway",
+      "location": "Gokarna, Karnataka",
+      "date": "Every Friday Departure",
+      "duration": "2 Days",
+      "price": 2499,
+      "image": "../images/trips/gokarna/cover.jpg",
+      "coverImage": "../images/trips/gokarna/cover.jpg",
+      "description": "A relaxed coastal escape with beach walks, sunrise views and campfire evenings.",
+      "published": true
+    },
+    {
+      "id": "weekend-camping",
+      "name": "Weekend Camping Experience",
+      "category": "Camping",
+      "location": "Near Bangalore",
+      "date": "Every Friday Departure",
+      "duration": "2 Days",
+      "price": 1999,
+      "image": "../images/trips/camping/cover.jpg",
+      "coverImage": "../images/trips/camping/cover.jpg",
+      "description": "A curated camping trip with guided hikes, campfire activities and professional support.",
+      "published": true
+    },
+    {
+      "id": "adventure-roadtrip",
+      "name": "Adventure Road Trip",
+      "category": "Road Trip",
+      "location": "Western Ghats Loop",
+      "date": "Every Friday Departure",
+      "duration": "4 Days",
+      "price": 4999,
+      "image": "../images/trips/roadtrip/cover.jpg",
+      "coverImage": "../images/trips/roadtrip/cover.jpg",
+      "description": "A multi-day road trip combining scenic drives, short hikes and cultural stops.",
+      "published": true
+    }
+  ],
+  "media": []
+}
