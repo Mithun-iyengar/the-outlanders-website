@@ -6,13 +6,13 @@
     "category": "Weekend Trips",
     "location": "Gokarna, Karnataka",
     "date": "Every Friday Departure",
-    "duration": "2 Days",
+    "duration": "2 Days / 1 Night",
     "price": 4499,
     "image": "../images/trips/gokarna/cover.jpg",
     "coverImage": "../images/trips/gokarna/cover.jpg",
     "description": "A relaxed coastal escape with beach walks, sunrise views and campfire evenings.",
     "published": true,
     "created_at": 1787670641047,
-    "updated_at": 1787670641047
+    "updated_at": 1787670952647
   }
 ]

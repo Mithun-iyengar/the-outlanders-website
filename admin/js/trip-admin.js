@@ -26,11 +26,30 @@
     async function applyUploadedFiles(){
       const coverInput = document.getElementById('coverFile');
       if(coverInput && coverInput.files && coverInput.files[0]){
-        document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
+        try {
+          const res = await DataAPI.uploadFile(coverInput.files[0]);
+          if(res && (res.url || res.fullUrl)){
+            document.getElementById('coverImage').value = res.url || res.fullUrl;
+          } else {
+            document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
+          }
+        } catch(e) {
+          document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
+        }
       }
+
       const itineraryInput = document.getElementById('itineraryFile');
       if(itineraryInput && itineraryInput.files && itineraryInput.files[0]){
-        document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
+        try {
+          const res = await DataAPI.uploadFile(itineraryInput.files[0]);
+          if(res && (res.url || res.fullUrl)){
+            document.getElementById('itinerary').value = res.url || res.fullUrl;
+          } else {
+            document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
+          }
+        } catch(e) {
+          document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
+        }
       }
     }
 
@@ -201,8 +220,8 @@
 
         <!-- Itinerary PDF Attachment Section -->
         <div class="card p-3 mb-3 border">
-          <h6 class="fw-bold mb-2"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>Itinerary PDF Document</h6>
-          <div class="row align-items-center">
+          <h6 class="fw-bold mb-2"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>Itinerary PDF Document / Text</h6>
+          <div class="row align-items-center mb-2">
             <div class="col-md-3">
               <div class="border rounded bg-white p-2 text-center">
                 <i class="bi bi-file-pdf display-5 text-danger d-block"></i>
@@ -211,7 +230,7 @@
             </div>
             <div class="col-md-9">
               <div class="mb-2">
-                <label class="form-label small font-monospace">Itinerary File Path / URL</label>
+                <label class="form-label small font-monospace">Itinerary File Path / URL or Text</label>
                 <input id="itinerary" class="form-control form-control-sm" placeholder="../assets/documents/Gokarna.pdf">
               </div>
               <div>
@@ -240,7 +259,17 @@
       if(coverFile && coverPrev){
         coverFile.addEventListener('change', async ()=>{
           if(coverFile.files && coverFile.files[0]){
-            coverPrev.src = await fileToDataURL(coverFile.files[0]);
+            const file = coverFile.files[0];
+            try {
+              const res = await DataAPI.uploadFile(file);
+              const imgUrl = res.url || res.fullUrl;
+              if(document.getElementById('coverImage')) document.getElementById('coverImage').value = imgUrl;
+              coverPrev.src = imgUrl;
+            } catch(e) {
+              const dataUrl = await fileToDataURL(file);
+              if(document.getElementById('coverImage')) document.getElementById('coverImage').value = dataUrl;
+              coverPrev.src = dataUrl;
+            }
           }
         });
       }
@@ -253,11 +282,30 @@
         });
       }
       if(itineraryFile && itineraryStatus){
-        itineraryFile.addEventListener('change', ()=>{
+        itineraryFile.addEventListener('change', async ()=>{
           if(itineraryFile.files && itineraryFile.files[0]){
-            const fName = itineraryFile.files[0].name;
-            itineraryStatus.textContent = fName.substring(0, 18);
-            itineraryStatus.className = 'small fw-bold text-success text-truncate d-block mt-1';
+            const file = itineraryFile.files[0];
+            if(itineraryStatus){
+              itineraryStatus.textContent = 'Uploading...';
+              itineraryStatus.className = 'small fw-bold text-warning text-truncate d-block mt-1';
+            }
+            try {
+              const res = await DataAPI.uploadFile(file);
+              const fileUrl = res.url || res.fullUrl;
+              if(document.getElementById('itinerary')) document.getElementById('itinerary').value = fileUrl;
+              if(itineraryStatus){
+                itineraryStatus.textContent = file.name.substring(0, 18) + ' (Uploaded)';
+                itineraryStatus.className = 'small fw-bold text-success text-truncate d-block mt-1';
+              }
+            } catch(err) {
+              console.warn('PDF upload fallback to dataURL:', err);
+              const dataUrl = await fileToDataURL(file);
+              if(document.getElementById('itinerary')) document.getElementById('itinerary').value = dataUrl;
+              if(itineraryStatus){
+                itineraryStatus.textContent = file.name.substring(0, 18) + ' (Ready)';
+                itineraryStatus.className = 'small fw-bold text-success text-truncate d-block mt-1';
+              }
+            }
           }
         });
       }

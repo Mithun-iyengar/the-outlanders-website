@@ -88,28 +88,33 @@
         const newId = prompt('New ID/slug for duplicate trek:', id+'-copy');
         if(newId){
           try{
-            await DataAPI.duplicateTrek(id, newId);
-            alert('Trek duplicated successfully');
-            location.reload();
-          } catch(err){ alert(err.message); }
+            const trek = await DataAPI.getTrekById(id);
+            if(trek){
+              trek.id = newId;
+              trek.name = trek.name + ' (Copy)';
+              await DataAPI.createTrek(trek);
+              alert('Duplicated successfully');
+              location.reload();
+            }
+          }catch(err){
+            alert('Duplicate failed: ' + err.message);
+          }
         }
       }));
     }
 
-    // Render form fields markup with dynamic CMS categories & itinerary file uploader
     async function renderFormFields(){
-      const container = document.getElementById('formFields') || document.getElementById('trekForm');
-      
+      const c = document.getElementById('formFields') || form;
+
       let categoryOptions = '<option value="Western Ghats">Western Ghats</option><option value="Weekend Trips">Weekend Trips</option><option value="Camping">Camping</option><option value="Road Trips">Road Trips</option><option value="Adventure Experiences">Adventure Experiences</option>';
-      
       if(window.DataAPI && typeof window.DataAPI.getCategories === 'function'){
         try {
           const catList = await DataAPI.getCategories();
           if(catList && catList.length > 0){
-            categoryOptions = catList.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            categoryOptions = catList.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
           }
-        } catch(e){
-          console.error('Category fetch error in trek form', e);
+        } catch(e) {
+          console.error('Failed to load categories for trek form', e);
         }
       }
 
@@ -120,8 +125,8 @@
         </div>
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="form-label fw-bold">Category*</label>
-            <select class="form-select" id="category" required>
+            <label class="form-label fw-bold">Category (From Categories Manager)*</label>
+            <select id="category" class="form-select" required>
               ${categoryOptions}
             </select>
           </div>
@@ -130,24 +135,24 @@
         <div class="row">
           <div class="col-md-4 mb-3">
             <label class="form-label fw-bold">Date / Schedule*</label>
-            <input class="form-control" id="date" placeholder="e.g. Every Friday Departure or Sept 12-14" required>
+            <input class="form-control" id="date" placeholder="e.g. Every Friday Departure or Oct 9-10" required>
           </div>
-          <div class="col-md-4 mb-3"><label class="form-label">Duration</label><input class="form-control" id="duration" placeholder="e.g. 2 Days / 1 Night"></div>
+          <div class="col-md-4 mb-3"><label class="form-label fw-bold">Duration</label><input class="form-control" id="duration" placeholder="e.g. 2 Days / 1 Night"></div>
           <div class="col-md-4 mb-3">
-            <label class="form-label fw-bold">Difficulty Level*</label>
-            <select class="form-select" id="difficulty" required>
+            <label class="form-label fw-bold">Difficulty Level</label>
+            <select id="difficulty" class="form-select">
               <option value="Easy">Easy</option>
               <option value="Easy to Moderate">Easy to Moderate</option>
-              <option value="Moderate" selected>Moderate</option>
+              <option value="Moderate">Moderate</option>
               <option value="Moderate to Difficult">Moderate to Difficult</option>
-              <option value="Challenging">Challenging / Difficult</option>
+              <option value="Challenging">Challenging</option>
             </select>
           </div>
         </div>
         <div class="row">
-          <div class="col-md-4 mb-3"><label class="form-label fw-bold">Price (₹)*</label><input class="form-control" id="price" type="number" placeholder="1999" required></div>
-          <div class="col-md-4 mb-3"><label class="form-label">Available Slots</label><input class="form-control" id="availableSlots" type="number" placeholder="15"></div>
-          <div class="col-md-4 mb-3"><label class="form-label fw-bold">Published State</label><select id="published" class="form-select"><option value="true">Published (Visible on site)</option><option value="false">Draft (Hidden)</option></select></div>
+          <div class="col-md-4 mb-3"><label class="form-label fw-bold">Price (₹)*</label><input id="price" class="form-control" type="number" placeholder="1999" required></div>
+          <div class="col-md-4 mb-3"><label class="form-label fw-bold">Available Slots</label><input id="availableSlots" class="form-control" type="number" placeholder="20"></div>
+          <div class="col-md-4 mb-3"><label class="form-label fw-bold">Published State</label><select id="published" class="form-select"><option value="true">Published</option><option value="false">Draft</option></select></div>
         </div>
 
         <!-- Package Inclusions Section -->
@@ -157,13 +162,13 @@
           <div class="form-text text-muted small">Enter each package feature on a new line. These render on the frontend detail booking card.</div>
         </div>
 
-        <!-- Trek Card Cover Image Section -->
+        <!-- Trek Cover Image Section -->
         <div class="card p-3 mb-3 border">
-          <h6 class="fw-bold mb-2"><i class="bi bi-image text-primary me-2"></i>Trek Card Cover Image</h6>
+          <h6 class="fw-bold mb-2"><i class="bi bi-image text-primary me-2"></i>Trek Cover Image</h6>
           <div class="row align-items-center">
             <div class="col-md-3">
               <div class="border rounded bg-dark p-1" style="height: 100px; overflow: hidden;">
-                <img id="coverPreview" src="" alt="Card Cover Preview" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='../images/treks/kudremukha/cover.jpg'">
+                <img id="coverPreview" src="" alt="Trek Cover Preview" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='../images/treks/kudremukha/cover.jpg'">
               </div>
             </div>
             <div class="col-md-9">
@@ -172,7 +177,7 @@
                 <input id="coverImage" class="form-control form-control-sm" placeholder="../images/treks/kudremukha/cover.jpg">
               </div>
               <div>
-                <label class="form-label small font-monospace">Or Upload New Image File</label>
+                <label class="form-label small font-monospace">Or Upload New Cover Image File</label>
                 <input id="coverFile" type="file" accept="image/*" class="form-control form-control-sm">
               </div>
             </div>
@@ -181,8 +186,8 @@
 
         <!-- Itinerary PDF Attachment Section -->
         <div class="card p-3 mb-3 border">
-          <h6 class="fw-bold mb-2"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>Itinerary PDF Document</h6>
-          <div class="row align-items-center">
+          <h6 class="fw-bold mb-2"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>Itinerary PDF Document / Text</h6>
+          <div class="row align-items-center mb-2">
             <div class="col-md-3">
               <div class="border rounded bg-white p-2 text-center">
                 <i class="bi bi-file-pdf display-5 text-danger d-block"></i>
@@ -191,7 +196,7 @@
             </div>
             <div class="col-md-9">
               <div class="mb-2">
-                <label class="form-label small font-monospace">Itinerary File Path / URL</label>
+                <label class="form-label small font-monospace">Itinerary File Path / URL or Text</label>
                 <input id="itinerary" class="form-control form-control-sm" placeholder="../assets/documents/Kudremukha.pdf">
               </div>
               <div>
@@ -202,15 +207,10 @@
           </div>
         </div>
 
-        <div class="mb-3"><label class="form-label">Short Description (for Trek Card)</label><textarea id="shortDescription" class="form-control" rows="2"></textarea></div>
-        <div class="mb-3"><label class="form-label">Full Description</label><textarea id="description" class="form-control" rows="5"></textarea></div>
+        <div class="mb-3"><label class="form-label fw-bold">Short Description (Summary Card)</label><textarea id="shortDescription" class="form-control" rows="2" placeholder="Brief summary displayed on trek card"></textarea></div>
+        <div class="mb-3"><label class="form-label fw-bold">Full Detailed Description</label><textarea id="description" class="form-control" rows="4" placeholder="Comprehensive itinerary or trek details"></textarea></div>
       `;
-
-      if(container.querySelector('#formFields')){
-        container.querySelector('#formFields').innerHTML = html;
-      } else {
-        container.insertAdjacentHTML('afterbegin', html);
-      }
+      c.innerHTML = html;
 
       const coverInput = document.getElementById('coverImage');
       const coverFile = document.getElementById('coverFile');
@@ -226,26 +226,53 @@
       if(coverFile && coverPrev){
         coverFile.addEventListener('change', async ()=>{
           if(coverFile.files && coverFile.files[0]){
-            coverPrev.src = await fileToDataURL(coverFile.files[0]);
+            const file = coverFile.files[0];
+            try {
+              const res = await DataAPI.uploadFile(file);
+              const imgUrl = res.url || res.fullUrl;
+              if(document.getElementById('coverImage')) document.getElementById('coverImage').value = imgUrl;
+              coverPrev.src = imgUrl;
+            } catch(e) {
+              const dataUrl = await fileToDataURL(file);
+              if(document.getElementById('coverImage')) document.getElementById('coverImage').value = dataUrl;
+              coverPrev.src = dataUrl;
+            }
           }
         });
       }
 
       if(itineraryInput && itineraryStatus){
         itineraryInput.addEventListener('input', ()=>{
-          const val = itineraryInput.value.trim();
+          const val = itineraryInput.value;
           itineraryStatus.textContent = val ? (val.split('/').pop().substring(0, 18) || 'Attached') : 'No PDF Attached';
           itineraryStatus.className = val ? 'small fw-bold text-success text-truncate d-block mt-1' : 'small fw-bold text-muted text-truncate d-block mt-1';
         });
       }
-
       if(itineraryFile && itineraryStatus){
         itineraryFile.addEventListener('change', async ()=>{
           if(itineraryFile.files && itineraryFile.files[0]){
             const file = itineraryFile.files[0];
-            itineraryStatus.textContent = file.name;
-            itineraryStatus.className = 'small fw-bold text-success text-truncate d-block mt-1';
-            itineraryInput.value = await fileToDataURL(file);
+            if(itineraryStatus){
+              itineraryStatus.textContent = 'Uploading...';
+              itineraryStatus.className = 'small fw-bold text-warning text-truncate d-block mt-1';
+            }
+            try {
+              const res = await DataAPI.uploadFile(file);
+              const fileUrl = res.url || res.fullUrl;
+              if(document.getElementById('itinerary')) document.getElementById('itinerary').value = fileUrl;
+              if(itineraryStatus){
+                itineraryStatus.textContent = file.name.substring(0, 18) + ' (Uploaded)';
+                itineraryStatus.className = 'small fw-bold text-success text-truncate d-block mt-1';
+              }
+            } catch(err) {
+              console.warn('PDF upload fallback to dataURL:', err);
+              const dataUrl = await fileToDataURL(file);
+              if(document.getElementById('itinerary')) document.getElementById('itinerary').value = dataUrl;
+              if(itineraryStatus){
+                itineraryStatus.textContent = file.name.substring(0, 18) + ' (Ready)';
+                itineraryStatus.className = 'small fw-bold text-success text-truncate d-block mt-1';
+              }
+            }
           }
         });
       }
@@ -325,11 +352,30 @@
     async function applyUploadedFiles(){
       const coverInput = document.getElementById('coverFile');
       if(coverInput && coverInput.files && coverInput.files[0]){
-        document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
+        try {
+          const res = await DataAPI.uploadFile(coverInput.files[0]);
+          if(res && (res.url || res.fullUrl)){
+            document.getElementById('coverImage').value = res.url || res.fullUrl;
+          } else {
+            document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
+          }
+        } catch(e) {
+          document.getElementById('coverImage').value = await fileToDataURL(coverInput.files[0]);
+        }
       }
+
       const itineraryInput = document.getElementById('itineraryFile');
       if(itineraryInput && itineraryInput.files && itineraryInput.files[0]){
-        document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
+        try {
+          const res = await DataAPI.uploadFile(itineraryInput.files[0]);
+          if(res && (res.url || res.fullUrl)){
+            document.getElementById('itinerary').value = res.url || res.fullUrl;
+          } else {
+            document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
+          }
+        } catch(e) {
+          document.getElementById('itinerary').value = await fileToDataURL(itineraryInput.files[0]);
+        }
       }
     }
 

@@ -216,27 +216,59 @@
         <h4 class="h5 fw-bold text-white mb-3">About The Experience</h4>
         <p class="lead text-light mb-4" style="font-size: 1.05rem; line-height: 1.7;">${escapeHtml(trek.shortDescription || trek.description || '')}</p>
         
-        <h4 class="h5 fw-bold text-white mb-3">Detailed Itinerary PDF Document</h4>
-        ${trek.itinerary ? `
-          <div class="p-3 rounded-3 mb-4 border border-secondary border-opacity-25" style="background: rgba(255,255,255,0.04);">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-              <div>
-                <h5 class="fw-bold text-white mb-1"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>Detailed Itinerary PDF</h5>
-                <p class="small text-white-50 mb-0">Download or view the uploaded day-by-day itinerary document.</p>
+        <h4 class="h5 fw-bold text-white mb-3">Detailed Itinerary</h4>
+        ${(function(){
+          const itinRaw = (trek.itinerary || '').trim();
+          if(!itinRaw) {
+            return `
+              <div class="p-3 rounded-3 mb-4 border border-secondary border-opacity-25" style="background: rgba(255,255,255,0.02);">
+                <p class="text-white-50 mb-2">Detailed day-by-day itinerary is available on request.</p>
+                <a class="btn btn-sm btn-outline-light fw-bold" href="https://wa.me/917795167667?text=Hi%20The%20Outlanders,%20please%20send%20me%20the%20itinerary%20for%20${encodeURIComponent(trek.name || trek.title)}" target="_blank">
+                  <i class="bi bi-whatsapp text-success me-1"></i> Request PDF on WhatsApp
+                </a>
               </div>
-              <a class="btn btn-outline-light fw-bold px-4 py-2" href="${escapeHtml(trek.itinerary)}" target="_blank" rel="noopener noreferrer" download="${escapeHtml(trek.name || 'Trek')}-Itinerary.pdf">
-                <i class="bi bi-file-earmark-pdf me-1"></i> VIEW / DOWNLOAD PDF
-              </a>
-            </div>
-          </div>
-        ` : `
-          <div class="p-3 rounded-3 mb-4 border border-secondary border-opacity-25" style="background: rgba(255,255,255,0.02);">
-            <p class="text-white-50 mb-2">Detailed day-by-day itinerary is available on request.</p>
-            <a class="btn btn-sm btn-outline-light fw-bold" href="https://wa.me/917795167667?text=Hi%20The%20Outlanders,%20please%20send%20me%20the%20itinerary%20for%20${encodeURIComponent(trek.name || trek.title)}" target="_blank">
-              <i class="bi bi-whatsapp text-success me-1"></i> Request PDF on WhatsApp
-            </a>
-          </div>
-        `}
+            `;
+          }
+          
+          function formatItineraryUrl(rawUrl) {
+            if (!rawUrl) return '';
+            const trimmed = String(rawUrl).trim();
+            if (trimmed.startsWith('data:') || trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+              return trimmed;
+            }
+            if (trimmed.startsWith('../')) {
+              return trimmed;
+            }
+            if (trimmed.startsWith('/')) {
+              return '..' + trimmed;
+            }
+            return '../' + trimmed;
+          }
+
+          const isFile = itinRaw.startsWith('data:') || itinRaw.startsWith('http') || itinRaw.startsWith('/') || itinRaw.startsWith('../') || /\.(pdf|doc|docx)$/i.test(itinRaw);
+          if (isFile) {
+            const itinUrl = formatItineraryUrl(itinRaw);
+            return `
+              <div class="p-3 rounded-3 mb-4 border border-secondary border-opacity-25" style="background: rgba(255,255,255,0.04);">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                  <div>
+                    <h5 class="fw-bold text-white mb-1"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>Detailed Itinerary PDF</h5>
+                    <p class="small text-white-50 mb-0">Download or view the uploaded day-by-day itinerary document.</p>
+                  </div>
+                  <a class="btn btn-outline-light fw-bold px-4 py-2" href="${escapeHtml(itinUrl)}" target="_blank" rel="noopener noreferrer" download="${escapeHtml(trek.name || 'Trek')}-Itinerary.pdf">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> VIEW / DOWNLOAD PDF
+                  </a>
+                </div>
+              </div>
+            `;
+          } else {
+            return `
+              <div class="p-3 rounded-3 mb-4 border border-secondary border-opacity-25" style="background: rgba(255,255,255,0.04);">
+                <div class="text-light" style="white-space: pre-line; line-height: 1.7;">${escapeHtml(itinRaw)}</div>
+              </div>
+            `;
+          }
+        })()}
       </div>
     `;
 
