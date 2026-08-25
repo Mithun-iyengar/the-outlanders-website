@@ -24,7 +24,7 @@ if (helmet) {
 }
 
 // Dynamic CORS Configuration
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:8000,http://127.0.0.1:8000,http://localhost:5000')
+const allowedOrigins = (process.env.FRONTEND_URL || 'https://the-outlanders-website.vercel.app,http://localhost:8000,http://127.0.0.1:8000,http://localhost:5000')
   .split(',')
   .map(o => o.trim());
 
@@ -97,7 +97,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 The Outlanders Production CMS Server running on http://localhost:${PORT}`);
   console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
   console.log(`🌐 Public Website: http://localhost:${PORT}/frontend/index.html`);
