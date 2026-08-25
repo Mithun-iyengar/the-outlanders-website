@@ -1,5 +1,32 @@
 [
   {
+    "id": "storage-trek-1787681358287",
+    "name": "Storage Test Trek",
+    "category": "Western Ghats",
+    "price": 3500,
+    "published": true,
+    "image": "../images/uploads/persistence-test-1787681358275.png",
+    "coverImage": "../images/uploads/persistence-test-1787681358275.png",
+    "shortDescription": "Testing Supabase storage image persistence.",
+    "slug": "storage-trek-1787681358287",
+    "location": "",
+    "date": "Every Friday Departure",
+    "duration": "2 Days",
+    "difficulty": "Moderate",
+    "featuredImage": "",
+    "description": "Testing Supabase storage image persistence.",
+    "featured": false,
+    "itinerary": "",
+    "inclusions": [
+      "Professional Guide & Lead",
+      "Meals & Refreshments",
+      "First Aid & Safety Gear",
+      "Permits & Local Entry Fees"
+    ],
+    "created_at": 1787681358348,
+    "updated_at": 1787681358348
+  },
+  {
     "id": "unauthorized-trek",
     "name": "Unauthorized Trek",
     "slug": "unauthorized-trek",

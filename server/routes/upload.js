@@ -31,7 +31,7 @@ if (multer) {
   const storage = multer.memoryStorage();
   upload = multer({
     storage: storage,
-    limits: { fileSize: 20 * 1024 * 1024 },
+    limits: { fileSize: 25 * 1024 * 1024 },
     fileFilter: function (req, file, cb) {
       cb(null, true);
     }
@@ -40,13 +40,15 @@ if (multer) {
 
 // Initialize Supabase Storage client securely
 function getSupabaseClient() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+  const url = process.env.SUPABASE_URL || 'https://qcwnzaeydvosuiclddqr.supabase.co';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_OgXymBA4gWFDUOuykSgvCA_6SRbPjSL';
   if (!url || !key) return null;
 
   try {
     const { createClient } = require('@supabase/supabase-js');
-    return createClient(url, key);
+    return createClient(url, key, {
+      auth: { persistSession: false }
+    });
   } catch (e) {
     console.warn('Supabase client initialization warning:', e.message);
     return null;
@@ -60,6 +62,8 @@ async function processSingleUpload(file, folder = '') {
   const filename = `${subFolder}${cleanName}-${Date.now()}${ext}`;
 
   const supabase = getSupabaseClient();
+  let supabaseErrorMsg = null;
+
   if (supabase) {
     try {
       const bucketName = process.env.SUPABASE_BUCKET || 'outlanders-images';
@@ -77,47 +81,58 @@ async function processSingleUpload(file, folder = '') {
           .from(bucketName)
           .getPublicUrl(filename);
 
+        const finalUrl = publicData.publicUrl;
+        console.log(`✅ Uploaded file directly to Supabase Storage bucket "${bucketName}":`, finalUrl);
+
         return {
           success: true,
-          url: publicData.publicUrl,
-          fullUrl: publicData.publicUrl,
+          url: finalUrl,
+          fullUrl: finalUrl,
           filename: filename,
           provider: 'supabase'
         };
       } else if (error) {
+        supabaseErrorMsg = error.message;
         console.warn('Supabase storage upload error:', error.message);
       }
     } catch (supabaseErr) {
+      supabaseErrorMsg = supabaseErr.message;
       console.warn('Supabase storage upload exception:', supabaseErr.message);
     }
   }
 
-  // Local disk backup if running locally
-  if (!isVercel) {
-    try {
-      const folderDir = ensureLocalUploadDir(folder);
-      if (folderDir) {
-        const baseFilename = `${cleanName}-${Date.now()}${ext}`;
-        const diskPath = path.join(folderDir, baseFilename);
-        fs.writeFileSync(diskPath, file.buffer);
-
-        const relPath = folder ? `../images/uploads/${folder}/${baseFilename}` : `../images/uploads/${baseFilename}`;
-        const fullPath = folder ? `/images/uploads/${folder}/${baseFilename}` : `/images/uploads/${baseFilename}`;
-
-        return {
-          success: true,
-          url: relPath,
-          fullUrl: fullPath,
-          filename: baseFilename,
-          provider: 'disk'
-        };
-      }
-    } catch (diskErr) {
-      console.warn('Disk upload write skipped:', diskErr.message);
-    }
+  // Strictly fail on Vercel if cloud storage upload fails
+  if (isVercel) {
+    return {
+      success: false,
+      error: `Supabase Storage upload failed: ${supabaseErrorMsg || 'Storage credentials or RLS policies unconfigured'}. Ensure bucket "outlanders-images" has public INSERT policy or configure SUPABASE_SERVICE_ROLE_KEY.`
+    };
   }
 
-  // Memory Base64 Fallback
+  // Local disk backup if running locally in development mode
+  try {
+    const folderDir = ensureLocalUploadDir(folder);
+    if (folderDir) {
+      const baseFilename = `${cleanName}-${Date.now()}${ext}`;
+      const diskPath = path.join(folderDir, baseFilename);
+      fs.writeFileSync(diskPath, file.buffer);
+
+      const relPath = folder ? `../images/uploads/${folder}/${baseFilename}` : `../images/uploads/${baseFilename}`;
+      const fullPath = folder ? `/images/uploads/${folder}/${baseFilename}` : `/images/uploads/${baseFilename}`;
+
+      return {
+        success: true,
+        url: relPath,
+        fullUrl: fullPath,
+        filename: baseFilename,
+        provider: 'disk'
+      };
+    }
+  } catch (diskErr) {
+    console.warn('Disk upload write skipped:', diskErr.message);
+  }
+
+  // Memory Base64 Fallback as absolute last resort for local dev
   const mime = file.mimetype || (ext.toLowerCase() === '.pdf' ? 'application/pdf' : 'image/jpeg');
   const base64Str = `data:${mime};base64,${file.buffer.toString('base64')}`;
   return {
@@ -152,6 +167,9 @@ router.post('/', authMiddleware, async (req, res) => {
       };
 
       const result = await processSingleUpload(fileObj, folder);
+      if (!result.success) {
+        return res.status(400).json(result);
+      }
       return res.status(201).json(result);
     }
 
@@ -165,6 +183,9 @@ router.post('/', authMiddleware, async (req, res) => {
 
         const folder = req.query.folder || req.body.folder || '';
         const result = await processSingleUpload(req.file, folder);
+        if (!result.success) {
+          return res.status(400).json(result);
+        }
         return res.status(201).json(result);
       });
     } else {
@@ -193,6 +214,9 @@ router.post('/batch', authMiddleware, async (req, res) => {
 
       for (let file of req.files) {
         const resSingle = await processSingleUpload(file, folder);
+        if (!resSingle.success) {
+          return res.status(400).json(resSingle);
+        }
         results.push(resSingle);
       }
 
