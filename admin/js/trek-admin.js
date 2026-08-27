@@ -369,7 +369,7 @@
           if (coverFile.files && coverFile.files[0]) {
             const file = coverFile.files[0];
             try {
-              const res = await DataAPI.uploadFile(file);
+              const res = await DataAPI.uploadFile(file, 'treks');
               const imgUrl = res.url || res.fullUrl;
               if (document.getElementById('coverImage')) document.getElementById('coverImage').value = imgUrl;
               coverPrev.src = imgUrl;

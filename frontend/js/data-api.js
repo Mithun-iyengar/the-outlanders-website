@@ -22,9 +22,12 @@
     try {
       const token = sessionStorage.getItem('outlanders_auth_token') || localStorage.getItem('outlanders_auth_token');
       if (token) return token;
-      return 'dev-admin-token-2026';
+      if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        return 'dev-admin-token-2026';
+      }
+      return '';
     } catch(e) {
-      return 'dev-admin-token-2026';
+      return '';
     }
   }
 
