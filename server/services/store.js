@@ -518,17 +518,21 @@ async function getMemories() {
     try {
       const res = await db.query('SELECT * FROM memories ORDER BY order_num ASC, created_at DESC');
       if (res && res.rows) {
-        return res.rows.map(row => ({
-          id: row.id,
-          image: row.image,
-          category: row.category || 'General',
-          order: Number(row.order_num || 1),
-          published: row.published !== false,
-          created_at: Number(row.created_at || Date.now())
-        }));
+        return res.rows.map(row => {
+          const rawOrder = parseInt(row.order_num, 10);
+          const rawCreated = parseInt(row.created_at, 10);
+          return {
+            id: String(row.id),
+            image: String(row.image),
+            category: row.category || 'General',
+            order: isNaN(rawOrder) ? 1 : rawOrder,
+            published: row.published !== false,
+            created_at: isNaN(rawCreated) ? Date.now() : rawCreated
+          };
+        });
       }
     } catch (e) {
-      console.warn('DB getMemories query error, fallback to local store:', e.message);
+      console.warn('DB getMemories query warning:', e.message);
     }
   }
   return readLocalStore().memories || DEFAULT_MEMORIES;
@@ -536,12 +540,37 @@ async function getMemories() {
 
 async function saveMemories(memoriesList) {
   const local = readLocalStore();
-  local.memories = Array.isArray(memoriesList) ? memoriesList : (local.memories || DEFAULT_MEMORIES);
+  const inputList = Array.isArray(memoriesList) ? memoriesList : [];
+  
+  // Clean and validate every single memory item before DB execution
+  const validMemories = [];
+  for (let i = 0; i < inputList.length; i++) {
+    const m = inputList[i];
+    if (!m || !m.image || typeof m.image !== 'string') continue;
+    const memId = String(m.id || ('mem-' + Date.now() + '-' + i));
+    const rawOrder = parseInt(m.order_num || m.order, 10);
+    const orderNum = isNaN(rawOrder) ? (i + 1) : rawOrder;
+    const categoryVal = String(m.category || 'General');
+    const isPublished = m.published !== false;
+    const rawCreated = parseInt(m.created_at, 10);
+    const createdAt = isNaN(rawCreated) ? Date.now() : rawCreated;
+
+    validMemories.push({
+      id: memId,
+      image: m.image,
+      category: categoryVal,
+      order: orderNum,
+      order_num: orderNum,
+      published: isPublished,
+      created_at: createdAt
+    });
+  }
+
+  local.memories = validMemories;
   writeLocalStore(local);
 
   if (db.isDbConnected()) {
     try {
-      // Ensure memories table exists and image column type is TEXT
       await db.query(`
         CREATE TABLE IF NOT EXISTS memories (
           id VARCHAR(255) PRIMARY KEY,
@@ -556,29 +585,21 @@ async function saveMemories(memoriesList) {
 
       await db.query('BEGIN');
       await db.query('DELETE FROM memories');
-      for (let i = 0; i < local.memories.length; i++) {
-        const m = local.memories[i];
-        if (!m || !m.image) continue;
-        const memId = m.id || ('mem-' + Date.now() + '-' + i);
-        const orderNum = Number(m.order || (i + 1));
-        const categoryVal = m.category || 'General';
-        const isPublished = m.published !== false;
-        const createdAt = Number(m.created_at || Date.now());
-
+      for (let item of validMemories) {
         await db.query(`
           INSERT INTO memories (id, image, category, order_num, published, created_at)
           VALUES ($1, $2, $3, $4, $5, $6)
-        `, [memId, m.image, categoryVal, orderNum, isPublished, createdAt]);
+        `, [item.id, item.image, item.category, item.order_num, item.published, item.created_at]);
       }
       await db.query('COMMIT');
-      console.log(`✅ Saved ${local.memories.length} memories directly to PostgreSQL table.`);
+      console.log(`✅ Successfully persisted ${validMemories.length} memories into PostgreSQL database.`);
     } catch (e) {
       await db.query('ROLLBACK').catch(() => {});
-      console.warn('DB saveMemories error, updated local store:', e.message);
+      console.error('❌ DB saveMemories PostgreSQL error:', e.message);
     }
   }
 
-  return local.memories;
+  return validMemories;
 }
 
 // === CONTENT / SETTINGS API ===
