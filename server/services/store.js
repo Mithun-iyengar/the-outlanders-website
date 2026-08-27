@@ -168,8 +168,18 @@ function writeLocalStore(store) {
 
 // === TREKS API ===
 async function getTreks() {
+  const defaultTreks = readLocalStore().treks || [];
   if (db.isDbConnected()) {
     try {
+      // Ensure all catalog treks exist in DB via UPSERT
+      for (let trek of defaultTreks) {
+        if (trek && trek.id) {
+          await saveTrek(trek).catch(() => {});
+        }
+      }
+      // Clean up old test rows
+      await db.query("DELETE FROM treks WHERE id LIKE 'unauth%' OR id LIKE 'e2e%'").catch(() => {});
+
       const res = await db.query('SELECT * FROM treks ORDER BY created_at DESC');
       if (res && res.rows && res.rows.length > 0) {
         return res.rows.map(row => ({
@@ -195,21 +205,11 @@ async function getTreks() {
           updated_at: Number(row.updated_at)
         }));
       }
-
-      // If DB has 0 rows, seed catalog from data/treks.json
-      const defaultTreks = readLocalStore().treks || [];
-      if (defaultTreks.length > 0) {
-        console.log(`🌱 Seeding ${defaultTreks.length} catalog treks into PostgreSQL table...`);
-        for (let trek of defaultTreks) {
-          await saveTrek(trek);
-        }
-        return defaultTreks;
-      }
     } catch (e) {
       console.warn('DB getTreks error, fallback to file:', e.message);
     }
   }
-  return readLocalStore().treks || [];
+  return defaultTreks;
 }
 
 async function getTrekById(id) {
@@ -310,8 +310,18 @@ async function deleteTrek(id) {
 
 // === TRIPS API ===
 async function getTrips() {
+  const defaultTrips = readLocalStore().trips || [];
   if (db.isDbConnected()) {
     try {
+      // Ensure all catalog trips exist in DB via UPSERT
+      for (let trip of defaultTrips) {
+        if (trip && trip.id) {
+          await saveTrip(trip).catch(() => {});
+        }
+      }
+      // Clean up old test rows
+      await db.query("DELETE FROM trips WHERE id LIKE 'unauth%' OR id LIKE 'e2e%'").catch(() => {});
+
       const res = await db.query('SELECT * FROM trips ORDER BY created_at DESC');
       if (res && res.rows && res.rows.length > 0) {
         return res.rows.map(row => ({
@@ -335,21 +345,11 @@ async function getTrips() {
           updated_at: Number(row.updated_at)
         }));
       }
-
-      // If DB has 0 rows, seed catalog from data/trips.json
-      const defaultTrips = readLocalStore().trips || [];
-      if (defaultTrips.length > 0) {
-        console.log(`🌱 Seeding ${defaultTrips.length} catalog trips into PostgreSQL table...`);
-        for (let trip of defaultTrips) {
-          await saveTrip(trip);
-        }
-        return defaultTrips;
-      }
     } catch (e) {
       console.warn('DB getTrips error:', e.message);
     }
   }
-  return readLocalStore().trips || [];
+  return defaultTrips;
 }
 
 async function saveTrip(tripData) {
