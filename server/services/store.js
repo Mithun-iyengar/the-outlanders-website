@@ -171,28 +171,40 @@ async function getTreks() {
   if (db.isDbConnected()) {
     try {
       const res = await db.query('SELECT * FROM treks ORDER BY created_at DESC');
-      return res.rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        slug: row.slug || row.id,
-        category: row.category,
-        location: row.location,
-        date: row.date,
-        duration: row.duration,
-        difficulty: row.difficulty,
-        price: parseFloat(row.price),
-        image: row.image,
-        coverImage: row.cover_image,
-        featuredImage: row.featured_image,
-        shortDescription: row.short_description,
-        description: row.short_description,
-        featured: row.featured,
-        published: row.published,
-        itinerary: row.itinerary,
-        inclusions: row.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
-        created_at: Number(row.created_at),
-        updated_at: Number(row.updated_at)
-      }));
+      if (res && res.rows && res.rows.length > 0) {
+        return res.rows.map(row => ({
+          id: row.id,
+          name: row.name,
+          slug: row.slug || row.id,
+          category: row.category,
+          location: row.location,
+          date: row.date,
+          duration: row.duration,
+          difficulty: row.difficulty,
+          price: parseFloat(row.price),
+          image: row.image,
+          coverImage: row.cover_image,
+          featuredImage: row.featured_image,
+          shortDescription: row.short_description,
+          description: row.short_description,
+          featured: row.featured,
+          published: row.published,
+          itinerary: row.itinerary,
+          inclusions: row.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
+          created_at: Number(row.created_at),
+          updated_at: Number(row.updated_at)
+        }));
+      }
+
+      // If DB has 0 rows, seed catalog from data/treks.json
+      const defaultTreks = readLocalStore().treks || [];
+      if (defaultTreks.length > 0) {
+        console.log(`🌱 Seeding ${defaultTreks.length} catalog treks into PostgreSQL table...`);
+        for (let trek of defaultTreks) {
+          await saveTrek(trek);
+        }
+        return defaultTreks;
+      }
     } catch (e) {
       console.warn('DB getTreks error, fallback to file:', e.message);
     }
@@ -301,25 +313,38 @@ async function getTrips() {
   if (db.isDbConnected()) {
     try {
       const res = await db.query('SELECT * FROM trips ORDER BY created_at DESC');
-      return res.rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        slug: row.slug || row.id,
-        category: row.category,
-        location: row.location,
-        date: row.date,
-        duration: row.duration,
-        price: parseFloat(row.price),
-        image: row.image,
-        coverImage: row.cover_image,
-        shortDescription: row.short_description || row.description,
-        description: row.description || row.short_description,
-        itinerary: row.itinerary || '',
-        inclusions: row.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
-        published: row.published,
-        created_at: Number(row.created_at),
-        updated_at: Number(row.updated_at)
-      }));
+      if (res && res.rows && res.rows.length > 0) {
+        return res.rows.map(row => ({
+          id: row.id,
+          name: row.name,
+          title: row.name,
+          slug: row.slug || row.id,
+          category: row.category,
+          location: row.location,
+          date: row.date,
+          duration: row.duration,
+          price: parseFloat(row.price),
+          image: row.image,
+          coverImage: row.cover_image,
+          shortDescription: row.short_description || row.description,
+          description: row.description || row.short_description,
+          itinerary: row.itinerary || '',
+          inclusions: row.inclusions || ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
+          published: row.published,
+          created_at: Number(row.created_at),
+          updated_at: Number(row.updated_at)
+        }));
+      }
+
+      // If DB has 0 rows, seed catalog from data/trips.json
+      const defaultTrips = readLocalStore().trips || [];
+      if (defaultTrips.length > 0) {
+        console.log(`🌱 Seeding ${defaultTrips.length} catalog trips into PostgreSQL table...`);
+        for (let trip of defaultTrips) {
+          await saveTrip(trip);
+        }
+        return defaultTrips;
+      }
     } catch (e) {
       console.warn('DB getTrips error:', e.message);
     }
