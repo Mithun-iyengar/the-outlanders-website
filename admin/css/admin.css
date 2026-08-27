@@ -97,10 +97,37 @@ p, span, div, td, th, label {
   border-right: 1px solid var(--sidebar-border);
 }
 
+/* Global Logo Styling & Containment */
+.admin-logo {
+  max-width: 100%;
+  max-height: 64px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: inline-block;
+  margin: 0 auto;
+}
+
 .sidebar .admin-logo {
-  max-height: 52px;
+  max-height: 48px;
+  max-width: 180px;
   width: auto;
   object-fit: contain;
+}
+
+.logo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.login-logo {
+  max-height: 72px;
+  max-width: 220px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
 }
 
 .sidebar .font-monospace,
@@ -364,7 +391,40 @@ p, span, div, td, th, label {
   border-color: #94A3B8 !important;
 }
 
-/* Mobile Navbar */
+/* Login Page Background & Card Customization */
+.admin-login-bg {
+  background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%) !important;
+  min-height: 100vh;
+}
+
+.login-card {
+  border-radius: 16px !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  box-shadow: 0 20px 35px -10px rgba(15, 23, 42, 0.08), 0 10px 15px -5px rgba(15, 23, 42, 0.04) !important;
+  background-color: #FFFFFF !important;
+  overflow: hidden;
+}
+
+.btn-login {
+  min-height: 48px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-login:hover, .btn-login:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.35);
+}
+
+.hover-underline:hover {
+  text-decoration: underline !important;
+}
+
+/* Mobile Navbar & Touch Target Optimizations */
 .navbar-dark.bg-dark {
   background-color: var(--sidebar-bg) !important;
 }
@@ -386,12 +446,54 @@ p, span, div, td, th, label {
   background-color: var(--admin-bg) !important;
 }
 
-/* Responsive adjustments */
-@media (max-width: 991px) {
+/* Responsive & Mobile Cross-Browser Optimizations (Android & iOS) */
+@media (max-width: 991.98px) {
   .admin-shell {
     flex-direction: column;
   }
   main {
+    padding: 1rem !important;
+  }
+  
+  /* Ensure min 44px touch height for mobile controls & prevent iOS Safari auto-zoom */
+  .form-control, .form-select, .btn {
+    min-height: 44px;
+    font-size: 16px !important; /* Critical for iOS Safari to prevent auto-zoom on focus */
+  }
+  
+  .table-responsive {
+    -webkit-overflow-scrolling: touch; /* Smooth inertia scrolling on iOS Safari */
+    margin-bottom: 1rem;
+  }
+  
+  .offcanvas-start {
+    width: 280px !important;
+  }
+  
+  .card-body {
     padding: 1.25rem !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  body {
+    font-size: 14px;
+  }
+  
+  h3, .h3, main h3 {
+    font-size: 1.35rem !important;
+  }
+  
+  .login-card .card-body {
+    padding: 1.5rem 1.15rem !important;
+  }
+  
+  .login-logo {
+    max-height: 58px;
+    max-width: 180px;
+  }
+  
+  .btn {
+    padding: 0.6rem 1rem;
   }
 }
