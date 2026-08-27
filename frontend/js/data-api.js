@@ -57,6 +57,16 @@
         if (contentType.includes('application/json')) {
           try { errData = await res.json(); } catch(e){}
         }
+        if (res.status === 401) {
+          try {
+            sessionStorage.removeItem('outlanders_auth_token');
+            localStorage.removeItem('outlanders_auth_token');
+          } catch(e){}
+          if (typeof window !== 'undefined' && window.location.pathname.includes('/admin/') && !window.location.pathname.endsWith('/index.html')) {
+            alert('Your admin login session has expired. Please log in again.');
+            window.location.href = 'index.html';
+          }
+        }
         const errorMsg = errData.error || `HTTP ${res.status}: ${res.statusText}`;
         throw new Error(errorMsg);
       }
