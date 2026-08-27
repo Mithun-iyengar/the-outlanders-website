@@ -469,10 +469,63 @@
     return true;
   }
 
+  // === IMAGE COMPRESSION HELPER (Prevents HTTP 413 Payload Too Large on Vercel) ===
+  function compressImageFile(file, maxDimension = 1920, quality = 0.82) {
+    return new Promise((resolve) => {
+      if (!file || !file.type || !file.type.startsWith('image/') || file.size < 600 * 1024) {
+        return resolve(file);
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) return resolve(file);
+              const compressedName = (file.name || 'image.jpg').replace(/\.[^/.]+$/, "") + ".jpg";
+              const compressedFile = new File([blob], compressedName, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+              console.log(`📉 Compressed image "${file.name}" from ${(file.size / 1024 / 1024).toFixed(2)}MB to ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
+              resolve(compressedFile);
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+        img.onerror = () => resolve(file);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
+  }
+
   // === FILE UPLOAD HELPER ===
   async function uploadFile(file, folder = '') {
+    const fileToUpload = await compressImageFile(file);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', fileToUpload);
     if (folder) formData.append('folder', folder);
     const endpoint = folder ? `/upload?folder=${encodeURIComponent(folder)}` : '/upload';
     return await apiRequest(endpoint, {
