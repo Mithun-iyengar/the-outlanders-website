@@ -248,6 +248,36 @@ async function saveTrek(trekData) {
 
   if (db.isDbConnected()) {
     try {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS treks (
+          id VARCHAR(255) PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          slug VARCHAR(255),
+          category VARCHAR(255),
+          location VARCHAR(255),
+          date VARCHAR(255),
+          duration VARCHAR(255),
+          difficulty VARCHAR(255),
+          price NUMERIC(10,2) DEFAULT 0,
+          image TEXT,
+          cover_image TEXT,
+          featured_image TEXT,
+          short_description TEXT,
+          featured BOOLEAN DEFAULT false,
+          published BOOLEAN DEFAULT true,
+          itinerary TEXT,
+          created_at BIGINT,
+          updated_at BIGINT
+        );
+      `);
+      await db.query(`ALTER TABLE treks ADD COLUMN IF NOT EXISTS cover_image TEXT;`).catch(() => {});
+      await db.query(`ALTER TABLE treks ADD COLUMN IF NOT EXISTS featured_image TEXT;`).catch(() => {});
+      await db.query(`ALTER TABLE treks ADD COLUMN IF NOT EXISTS itinerary TEXT;`).catch(() => {});
+      await db.query(`ALTER TABLE treks ADD COLUMN IF NOT EXISTS slug VARCHAR(255);`).catch(() => {});
+      await db.query(`ALTER TABLE treks ADD COLUMN IF NOT EXISTS difficulty VARCHAR(255);`).catch(() => {});
+      await db.query(`ALTER TABLE treks ADD COLUMN IF NOT EXISTS duration VARCHAR(255);`).catch(() => {});
+      await db.query(`ALTER TABLE treks ADD COLUMN IF NOT EXISTS short_description TEXT;`).catch(() => {});
+
       const queryText = `
         INSERT INTO treks (id, name, slug, category, location, date, duration, difficulty, price, image, cover_image, featured_image, short_description, featured, published, itinerary, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
@@ -382,6 +412,32 @@ async function saveTrip(tripData) {
 
   if (db.isDbConnected()) {
     try {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS trips (
+          id VARCHAR(255) PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          slug VARCHAR(255),
+          category VARCHAR(255),
+          location VARCHAR(255),
+          date VARCHAR(255),
+          duration VARCHAR(255),
+          price NUMERIC(10,2) DEFAULT 0,
+          image TEXT,
+          cover_image TEXT,
+          description TEXT,
+          short_description TEXT,
+          itinerary TEXT,
+          published BOOLEAN DEFAULT true,
+          created_at BIGINT,
+          updated_at BIGINT
+        );
+      `);
+      await db.query(`ALTER TABLE trips ADD COLUMN IF NOT EXISTS cover_image TEXT;`).catch(() => {});
+      await db.query(`ALTER TABLE trips ADD COLUMN IF NOT EXISTS itinerary TEXT;`).catch(() => {});
+      await db.query(`ALTER TABLE trips ADD COLUMN IF NOT EXISTS slug VARCHAR(255);`).catch(() => {});
+      await db.query(`ALTER TABLE trips ADD COLUMN IF NOT EXISTS duration VARCHAR(255);`).catch(() => {});
+      await db.query(`ALTER TABLE trips ADD COLUMN IF NOT EXISTS short_description TEXT;`).catch(() => {});
+
       const queryText = `
         INSERT INTO trips (id, name, slug, category, location, date, duration, price, image, cover_image, description, short_description, itinerary, published, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
