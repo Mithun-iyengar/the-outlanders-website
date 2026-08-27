@@ -100,7 +100,12 @@
       }
 
       if(diff && diff !== 'All'){
-        list = list.filter(t => t.difficulty && t.difficulty.toLowerCase() === diff.toLowerCase());
+        const targetDiff = diff.toLowerCase().replace(/-/g, ' ').trim();
+        list = list.filter(t => {
+          if (!t.difficulty) return false;
+          const itemDiff = t.difficulty.toLowerCase().replace(/-/g, ' ').trim();
+          return itemDiff === targetDiff;
+        });
       }
 
       if(dur && dur !== 'All'){
