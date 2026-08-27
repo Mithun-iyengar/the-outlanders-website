@@ -467,10 +467,12 @@
   }
 
   // === FILE UPLOAD HELPER ===
-  async function uploadFile(file) {
+  async function uploadFile(file, folder = '') {
     const formData = new FormData();
     formData.append('file', file);
-    return await apiRequest('/upload', {
+    if (folder) formData.append('folder', folder);
+    const endpoint = folder ? `/upload?folder=${encodeURIComponent(folder)}` : '/upload';
+    return await apiRequest(endpoint, {
       method: 'POST',
       isJSON: false,
       body: formData

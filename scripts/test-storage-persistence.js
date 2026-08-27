@@ -110,16 +110,72 @@ async function runSecureStorageTest() {
   checkNoSecrets(adminDir);
   console.log('✅ PASS: ZERO secrets or service_role keys exposed in frontend or admin code.\n');
 
-  // Check 7: Cleanup Test Record
-  console.log('Check 7: Cleaning up test trek record...');
+  // Check 7: Memories CMS Upload & Database Persistence Flow
+  console.log('Check 7: Testing Memories CMS Upload & Database Persistence Flow...');
+  const memUploadRes = await fetch(`${API_BASE}/upload?folder=memories`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      base64: sampleBase64,
+      filename: `memory-test-${Date.now()}.png`,
+      folder: 'memories'
+    })
+  });
+  const memUploadData = await memUploadRes.json();
+  assert.strictEqual(memUploadRes.status, 201, `Memories image upload failed: ${JSON.stringify(memUploadData)}`);
+  const memImgUrl = memUploadData.url || memUploadData.fullUrl;
+  assert.ok(memImgUrl, 'Memories upload missing URL');
+  console.log(`✅ PASS: Memories image uploaded successfully (${memImgUrl}).`);
+
+  const testMemId = `mem-e2e-${Date.now()}`;
+  const getInitialMemRes = await fetch(`${API_BASE}/memories`);
+  const initialMemories = await getInitialMemRes.json();
+
+  const newMemItem = {
+    id: testMemId,
+    image: memImgUrl,
+    category: 'Western Ghats',
+    order: 1,
+    published: true,
+    created_at: Date.now()
+  };
+
+  const putMemRes = await fetch(`${API_BASE}/memories`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify([newMemItem, ...initialMemories])
+  });
+  assert.strictEqual(putMemRes.status, 200, 'PUT /api/memories failed');
+
+  const getReloadedMemRes = await fetch(`${API_BASE}/memories?t=${Date.now()}`);
+  const reloadedMemories = await getReloadedMemRes.json();
+  const foundMem = reloadedMemories.find(m => m.id === testMemId);
+  assert.ok(foundMem, 'Saved memory item not found on reload');
+  assert.strictEqual(foundMem.image, memImgUrl, 'Persisted memories.image URL does not match uploaded URL!');
+  console.log('✅ PASS: Memories item and image URL persisted perfectly across Admin & Frontend.\n');
+
+  // Check 8: Cleanup Test Records
+  console.log('Check 8: Cleaning up test records...');
   const delRes = await fetch(`${API_BASE}/treks/${testTrekId}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` }
   });
   assert.strictEqual(delRes.status, 200, 'Delete test trek failed');
+
+  const delMemRes = await fetch(`${API_BASE}/memories/${testMemId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  assert.strictEqual(delMemRes.status, 200, 'Delete test memory failed');
   console.log('✅ PASS: Cleanup successful.\n');
 
-  console.log('🎉 ALL SECURE STORAGE & PERSISTENCE VERIFICATION CHECKS PASSED PERFECTLY!');
+  console.log('🎉 ALL SECURE STORAGE & MEMORIES PERSISTENCE CHECKS PASSED PERFECTLY!');
 }
 
 runSecureStorageTest().catch(err => {

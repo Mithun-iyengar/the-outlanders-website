@@ -516,36 +516,49 @@ async function getMemories() {
   if (db.isDbConnected()) {
     try {
       const res = await db.query('SELECT * FROM memories ORDER BY order_num ASC, created_at DESC');
-      if (res.rows.length > 0) {
+      if (res && res.rows) {
         return res.rows.map(row => ({
           id: row.id,
           image: row.image,
-          category: row.category,
-          order: row.order_num,
-          published: row.published,
-          created_at: Number(row.created_at)
+          category: row.category || 'General',
+          order: Number(row.order_num || 1),
+          published: row.published !== false,
+          created_at: Number(row.created_at || Date.now())
         }));
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('DB getMemories query error, fallback to local store:', e.message);
+    }
   }
   return readLocalStore().memories || DEFAULT_MEMORIES;
 }
 
 async function saveMemories(memoriesList) {
   const local = readLocalStore();
-  local.memories = memoriesList || DEFAULT_MEMORIES;
+  local.memories = Array.isArray(memoriesList) ? memoriesList : (local.memories || DEFAULT_MEMORIES);
   writeLocalStore(local);
 
   if (db.isDbConnected()) {
     try {
       await db.query('DELETE FROM memories');
-      for (let m of local.memories) {
+      for (let i = 0; i < local.memories.length; i++) {
+        const m = local.memories[i];
+        if (!m || !m.image) continue;
+        const memId = m.id || ('mem-' + Date.now() + '-' + i);
+        const orderNum = Number(m.order || (i + 1));
+        const categoryVal = m.category || 'General';
+        const isPublished = m.published !== false;
+        const createdAt = Number(m.created_at || Date.now());
+
         await db.query(`
           INSERT INTO memories (id, image, category, order_num, published, created_at)
           VALUES ($1, $2, $3, $4, $5, $6)
-        `, [m.id || 'mem-' + Date.now(), m.image, m.category || 'General', m.order || 1, m.published !== false, m.created_at || Date.now()]);
+        `, [memId, m.image, categoryVal, orderNum, isPublished, createdAt]);
       }
-    } catch (e) {}
+      console.log(`✅ Saved ${local.memories.length} memories directly to PostgreSQL table.`);
+    } catch (e) {
+      console.warn('DB saveMemories error, updated local store:', e.message);
+    }
   }
 
   return local.memories;

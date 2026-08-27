@@ -217,21 +217,27 @@
           
           let imgUrl = '';
           try {
-            const res = await DataAPI.uploadFile(file);
-            imgUrl = res.url || res.fullUrl;
+            const res = await DataAPI.uploadFile(file, 'memories');
+            if (res && res.success !== false && (res.url || res.fullUrl)) {
+              imgUrl = res.url || res.fullUrl;
+            } else {
+              throw new Error((res && res.error) ? res.error : 'Upload response missing image URL');
+            }
           } catch(e) {
-            console.warn('Upload API fallback to compressed dataURL:', e);
+            console.warn('Upload API exception fallback:', e.message);
             imgUrl = await fileToDataURL(file);
           }
 
-          workingMemories.unshift({
-            id: 'mem-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
-            image: imgUrl,
-            category: categoryFilter ? (categoryFilter.value !== 'All' ? categoryFilter.value : 'Western Ghats') : 'Western Ghats',
-            order: workingMemories.length + 1,
-            created_at: Date.now() + i,
-            published: true
-          });
+          if (imgUrl) {
+            workingMemories.unshift({
+              id: 'mem-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+              image: imgUrl,
+              category: categoryFilter ? (categoryFilter.value !== 'All' ? categoryFilter.value : 'Western Ghats') : 'Western Ghats',
+              order: workingMemories.length + 1,
+              created_at: Date.now() + i,
+              published: true
+            });
+          }
         }
 
         workingMemories.forEach((m, i) => m.order = i + 1);
