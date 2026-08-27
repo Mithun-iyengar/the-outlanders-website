@@ -17,6 +17,3 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Uploaded persistent images (if using local storage fallback)
-images/uploads/*
-!images/uploads/.gitkeep
