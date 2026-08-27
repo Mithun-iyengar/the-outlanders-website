@@ -514,6 +514,8 @@ async function deleteCategory(id) {
 
 // === MEMORIES API ===
 async function getMemories() {
+  const isProd = Boolean(process.env.VERCEL || process.env.NODE_ENV === 'production' || process.env.DATABASE_URL);
+
   if (db.isDbConnected()) {
     try {
       const res = await db.query('SELECT * FROM memories ORDER BY order_num ASC, created_at DESC');
@@ -532,15 +534,22 @@ async function getMemories() {
         });
       }
     } catch (e) {
-      console.warn('DB getMemories query warning:', e.message);
+      console.error('❌ DB getMemories query error:', e.message);
+      if (isProd) {
+        throw new Error(`Database getMemories query failed: ${e.message}`);
+      }
     }
+  } else if (isProd) {
+    throw new Error('Database connection unavailable in production environment. Ensure DATABASE_URL is set.');
   }
+
   return readLocalStore().memories || DEFAULT_MEMORIES;
 }
 
 async function saveMemories(memoriesList) {
   const local = readLocalStore();
   const inputList = Array.isArray(memoriesList) ? memoriesList : [];
+  const isProd = Boolean(process.env.VERCEL || process.env.NODE_ENV === 'production' || process.env.DATABASE_URL);
   
   // Clean and validate every single memory item before DB execution
   const validMemories = [];
@@ -593,10 +602,16 @@ async function saveMemories(memoriesList) {
       }
       await db.query('COMMIT');
       console.log(`✅ Successfully persisted ${validMemories.length} memories into PostgreSQL database.`);
+      return validMemories;
     } catch (e) {
       await db.query('ROLLBACK').catch(() => {});
       console.error('❌ DB saveMemories PostgreSQL error:', e.message);
+      if (isProd) {
+        throw new Error(`Database saveMemories failed: ${e.message}`);
+      }
     }
+  } else if (isProd) {
+    throw new Error('Database connection unavailable in production environment. Ensure DATABASE_URL is set.');
   }
 
   return validMemories;

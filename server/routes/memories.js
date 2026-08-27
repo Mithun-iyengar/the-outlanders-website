@@ -4,6 +4,41 @@ const router = express.Router();
 const store = require('../services/store');
 const { authMiddleware } = require('../middleware/auth');
 
+// GET /api/memories/debug - Public Production Diagnostic Endpoint
+router.get('/debug', async (req, res) => {
+  const db = require('../config/db');
+  try {
+    const isConnected = db.isDbConnected();
+    const hasDbUrl = Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
+    let rowsCount = 0;
+    let sampleRows = [];
+    let queryError = null;
+
+    if (isConnected) {
+      try {
+        const queryRes = await db.query('SELECT id, image, category, order_num, created_at FROM memories ORDER BY order_num ASC, created_at DESC LIMIT 5');
+        const countRes = await db.query('SELECT COUNT(*) FROM memories');
+        rowsCount = countRes.rows[0] ? countRes.rows[0].count : 0;
+        sampleRows = queryRes.rows;
+      } catch (err) {
+        queryError = err.message;
+      }
+    }
+
+    return res.json({
+      status: 'ok',
+      dbConnected: isConnected,
+      hasDbUrl: hasDbUrl,
+      environment: process.env.VERCEL ? 'vercel-production' : (process.env.NODE_ENV || 'development'),
+      postgresRowsCount: parseInt(rowsCount, 10) || 0,
+      latestMemories: sampleRows,
+      queryError: queryError
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/memories - Public
 router.get('/', async (req, res) => {
   try {
@@ -11,7 +46,7 @@ router.get('/', async (req, res) => {
     return res.json(mems);
   } catch (err) {
     console.error('GET /api/memories error:', err);
-    return res.status(500).json({ error: 'Failed to fetch memories' });
+    return res.status(500).json({ error: 'Failed to fetch memories: ' + err.message });
   }
 });
 
@@ -27,7 +62,7 @@ router.put('/', authMiddleware, async (req, res) => {
     return res.json(saved);
   } catch (err) {
     console.error('PUT /api/memories error:', err);
-    return res.status(500).json({ error: 'Failed to save memories' });
+    return res.status(500).json({ error: 'Failed to save memories: ' + err.message });
   }
 });
 
