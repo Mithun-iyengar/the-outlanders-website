@@ -9,10 +9,26 @@ try {
 let pool = null;
 let isConnected = false;
 
-const rawDbUrl = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL || process.env.POSTGRES_URL || process.env.SUPABASE_DB_URL || '';
-const dbUrl = typeof rawDbUrl === 'string' ? rawDbUrl.trim().replace(/^["']|["']$/g, '') : '';
+function getValidDbUrl() {
+  const candidates = [
+    process.env.DATABASE_URL,
+    process.env.SUPABASE_DATABASE_URL,
+    process.env.SUPABASE_DB_URL,
+    process.env.POSTGRES_URL
+  ];
+  for (let cand of candidates) {
+    if (!cand || typeof cand !== 'string') continue;
+    const cleaned = cand.trim().replace(/^["']|["']$/g, '');
+    if (cleaned.length > 10 && !cleaned.includes('@base/') && !cleaned.includes('@base:') && !cleaned.includes('://base') && (cleaned.includes('postgresql://') || cleaned.includes('postgres://'))) {
+      return cleaned;
+    }
+  }
+  return '';
+}
 
-if (Pool && dbUrl && dbUrl.length > 5) {
+const dbUrl = getValidDbUrl();
+
+if (Pool && dbUrl) {
   try {
     pool = new Pool({
       connectionString: dbUrl,

@@ -25,10 +25,14 @@ router.get('/debug', async (req, res) => {
       }
     }
 
+    const rawUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || 'none';
+    const sanitizedUrl = rawUrl.replace(/:[^:@]+@/, ':****@');
+
     return res.json({
       status: 'ok',
       dbConnected: isConnected,
       hasDbUrl: hasDbUrl,
+      sanitizedDbUrl: sanitizedUrl,
       environment: process.env.VERCEL ? 'vercel-production' : (process.env.NODE_ENV || 'development'),
       postgresRowsCount: parseInt(rowsCount, 10) || 0,
       latestMemories: sampleRows,
