@@ -78,11 +78,13 @@ async function runSecureStorageTest() {
     body: JSON.stringify(trekPayload)
   });
   assert.ok(saveRes.status === 200 || saveRes.status === 201, 'Save trek failed');
+  const savedTrek = await saveRes.json();
+  const actualTrekId = savedTrek.id || testTrekId;
   console.log('✅ PASS: Trek saved successfully into database.\n');
 
   // Check 5: Retrieve Saved Trek (Simulating Admin Refresh & Frontend Fetch)
   console.log('Check 5: Fetching saved trek to verify image persistence across Admin & Frontend...');
-  const getRes = await fetch(`${API_BASE}/treks/${testTrekId}`);
+  const getRes = await fetch(`${API_BASE}/treks/${actualTrekId}`);
   const trekObj = await getRes.json();
   assert.strictEqual(getRes.status, 200, 'Fetch trek failed');
   assert.strictEqual(trekObj.image, uploadedUrl, 'Persisted image URL does not match uploaded URL!');
@@ -162,7 +164,7 @@ async function runSecureStorageTest() {
 
   // Check 8: Cleanup Test Records
   console.log('Check 8: Cleaning up test records...');
-  const delRes = await fetch(`${API_BASE}/treks/${testTrekId}`, {
+  const delRes = await fetch(`${API_BASE}/treks/${actualTrekId}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` }
   });
