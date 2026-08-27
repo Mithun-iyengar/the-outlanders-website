@@ -171,16 +171,16 @@ async function getTreks() {
   const defaultTreks = readLocalStore().treks || [];
   if (db.isDbConnected()) {
     try {
-      // Ensure all catalog treks exist in DB via UPSERT
-      for (let trek of defaultTreks) {
-        if (trek && trek.id) {
-          await saveTrek(trek).catch(() => {});
-        }
+      // Clean up test rows and trigger catalog upserts asynchronously in background
+      db.query("DELETE FROM treks WHERE id LIKE 'unauth%' OR id LIKE 'e2e%'").catch(() => {});
+      
+      const res = await db.query('SELECT * FROM treks WHERE id NOT LIKE \'unauth%\' AND id NOT LIKE \'e2e%\' ORDER BY created_at DESC');
+      
+      // If DB lacks catalog treks, trigger background seed without delaying GET response
+      if (!res.rows || res.rows.length < defaultTreks.length) {
+        Promise.all(defaultTreks.map(t => saveTrek(t).catch(() => {}))).catch(() => {});
       }
-      // Clean up old test rows
-      await db.query("DELETE FROM treks WHERE id LIKE 'unauth%' OR id LIKE 'e2e%'").catch(() => {});
 
-      const res = await db.query('SELECT * FROM treks ORDER BY created_at DESC');
       if (res && res.rows && res.rows.length > 0) {
         return res.rows.map(row => ({
           id: row.id,
@@ -343,16 +343,16 @@ async function getTrips() {
   const defaultTrips = readLocalStore().trips || [];
   if (db.isDbConnected()) {
     try {
-      // Ensure all catalog trips exist in DB via UPSERT
-      for (let trip of defaultTrips) {
-        if (trip && trip.id) {
-          await saveTrip(trip).catch(() => {});
-        }
-      }
-      // Clean up old test rows
-      await db.query("DELETE FROM trips WHERE id LIKE 'unauth%' OR id LIKE 'e2e%'").catch(() => {});
+      // Clean up test rows and trigger catalog upserts asynchronously in background
+      db.query("DELETE FROM trips WHERE id LIKE 'unauth%' OR id LIKE 'e2e%'").catch(() => {});
 
-      const res = await db.query('SELECT * FROM trips ORDER BY created_at DESC');
+      const res = await db.query('SELECT * FROM trips WHERE id NOT LIKE \'unauth%\' AND id NOT LIKE \'e2e%\' ORDER BY created_at DESC');
+
+      // If DB lacks catalog trips, trigger background seed without delaying GET response
+      if (!res.rows || res.rows.length < defaultTrips.length) {
+        Promise.all(defaultTrips.map(t => saveTrip(t).catch(() => {}))).catch(() => {});
+      }
+
       if (res && res.rows && res.rows.length > 0) {
         return res.rows.map(row => ({
           id: row.id,
