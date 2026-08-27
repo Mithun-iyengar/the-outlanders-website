@@ -419,7 +419,7 @@ async function deleteTrip(id) {
 async function getCategories() {
   if (db.isDbConnected()) {
     try {
-      const res = await db.query('SELECT * FROM categories ORDER BY order_num ASC');
+      const res = await db.query("SELECT * FROM categories WHERE LOWER(name) NOT LIKE '%test%' AND id NOT LIKE 'test-%' AND id NOT LIKE 'e2e-%' ORDER BY order_num ASC");
       if (res.rows.length > 0) {
         return res.rows.map(row => ({
           id: row.id,
@@ -434,7 +434,8 @@ async function getCategories() {
       }
     } catch (e) {}
   }
-  return readLocalStore().categories || DEFAULT_CATEGORIES;
+  const localCats = readLocalStore().categories || DEFAULT_CATEGORIES;
+  return localCats.filter(c => c && c.name && !c.name.toLowerCase().includes('test') && !c.id.startsWith('test-') && !c.id.startsWith('e2e-'));
 }
 
 async function saveCategory(catData) {
