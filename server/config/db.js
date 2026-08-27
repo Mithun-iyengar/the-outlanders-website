@@ -9,9 +9,10 @@ try {
 let pool = null;
 let isConnected = false;
 
-const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.SUPABASE_DB_URL || process.env.SUPABASE_DATABASE_URL;
+const rawDbUrl = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL || process.env.POSTGRES_URL || process.env.SUPABASE_DB_URL || '';
+const dbUrl = typeof rawDbUrl === 'string' ? rawDbUrl.trim().replace(/^["']|["']$/g, '') : '';
 
-if (Pool && dbUrl) {
+if (Pool && dbUrl && dbUrl.length > 5) {
   try {
     pool = new Pool({
       connectionString: dbUrl,
@@ -33,6 +34,7 @@ if (Pool && dbUrl) {
       })
       .catch((err) => {
         console.warn('⚠️ Could not connect to PostgreSQL database:', err.message);
+        isConnected = false;
       });
   } catch (e) {
     console.warn('⚠️ Pool initialization error:', e.message);
@@ -48,13 +50,13 @@ async function query(text, params) {
       isConnected = true;
       return res;
     } catch (err) {
-      if (err.message && (err.message.includes('Connection terminated') || err.message.includes('closed'))) {
+      if (err.message && (err.message.includes('Connection terminated') || err.message.includes('closed') || err.message.includes('ENOTFOUND'))) {
         isConnected = false;
       }
       throw err;
     }
   }
-  throw new Error('Database pool not initialized.');
+  throw new Error('Database pool not initialized or DATABASE_URL invalid.');
 }
 
 function getPool() {
@@ -62,7 +64,7 @@ function getPool() {
 }
 
 function isDbConnected() {
-  return pool !== null && (isConnected || Boolean(dbUrl));
+  return pool !== null;
 }
 
 module.exports = {
