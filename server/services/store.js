@@ -540,6 +540,20 @@ async function saveMemories(memoriesList) {
 
   if (db.isDbConnected()) {
     try {
+      // Ensure memories table exists and image column type is TEXT
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS memories (
+          id VARCHAR(255) PRIMARY KEY,
+          image TEXT NOT NULL,
+          category VARCHAR(255) DEFAULT 'General',
+          order_num INT DEFAULT 1,
+          published BOOLEAN DEFAULT true,
+          created_at BIGINT
+        );
+      `);
+      await db.query(`ALTER TABLE memories ALTER COLUMN image TYPE TEXT;`).catch(() => {});
+
+      await db.query('BEGIN');
       await db.query('DELETE FROM memories');
       for (let i = 0; i < local.memories.length; i++) {
         const m = local.memories[i];
@@ -555,8 +569,10 @@ async function saveMemories(memoriesList) {
           VALUES ($1, $2, $3, $4, $5, $6)
         `, [memId, m.image, categoryVal, orderNum, isPublished, createdAt]);
       }
+      await db.query('COMMIT');
       console.log(`✅ Saved ${local.memories.length} memories directly to PostgreSQL table.`);
     } catch (e) {
+      await db.query('ROLLBACK').catch(() => {});
       console.warn('DB saveMemories error, updated local store:', e.message);
     }
   }

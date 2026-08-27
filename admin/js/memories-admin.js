@@ -224,8 +224,12 @@
               throw new Error((res && res.error) ? res.error : 'Upload response missing image URL');
             }
           } catch(e) {
-            console.warn('Upload API exception fallback:', e.message);
-            imgUrl = await fileToDataURL(file);
+            console.warn('Upload API exception:', e.message);
+            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+              alert('Image upload failed: ' + e.message);
+            } else {
+              imgUrl = await fileToDataURL(file);
+            }
           }
 
           if (imgUrl) {
