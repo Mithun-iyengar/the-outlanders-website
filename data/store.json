@@ -297,58 +297,88 @@
   ],
   "treks": [
     {
-      "id": "storage-trek-1787681358287",
-      "name": "Storage Test Trek",
-      "category": "Western Ghats",
-      "price": 3500,
-      "published": true,
-      "image": "../images/uploads/persistence-test-1787681358275.png",
-      "coverImage": "../images/uploads/persistence-test-1787681358275.png",
-      "shortDescription": "Testing Supabase storage image persistence.",
-      "slug": "storage-trek-1787681358287",
-      "location": "",
+      "id": "Dudhsagar",
+      "name": "Dudhsagar Trek",
+      "category": "Weekend Trips",
+      "location": "Goa",
       "date": "Every Friday Departure",
-      "duration": "2 Days",
-      "difficulty": "Moderate",
-      "featuredImage": "",
-      "description": "Testing Supabase storage image persistence.",
-      "featured": false,
-      "itinerary": "",
+      "duration": "3 Days / 2 Night",
+      "difficulty": "Easy to Moderate",
+      "price": 4499,
       "inclusions": [
         "Professional Guide & Lead",
         "Meals & Refreshments",
         "First Aid & Safety Gear",
-        "Permits & Local Entry Fees"
+        "Permits & Local Entry Fees",
+        "Transportation"
       ],
-      "created_at": 1787681358348,
-      "updated_at": 1787681358348
+      "shortDescription": "Chase the falls. Feel the adventure. Make memories that last forever.",
+      "description": "Chase the falls. Feel the adventure. Make memories that last forever.",
+      "coverImage": "../images/uploads/screenshot-2026-08-27-173441-1787832361116.png",
+      "image": "../images/uploads/screenshot-2026-08-27-173441-1787832361116.png",
+      "itinerary": "../images/uploads/dudhsagar-1787832361151.pdf",
+      "published": true,
+      "featured": false,
+      "slug": "Dudhsagar",
+      "featuredImage": "",
+      "created_at": 1787832361225,
+      "updated_at": 1787832430889
     },
     {
-      "id": "unauthorized-trek",
-      "name": "Unauthorized Trek",
-      "slug": "unauthorized-trek",
+      "id": "Gangadikal",
+      "name": "Gangadikal Trek",
       "category": "Western Ghats",
-      "location": "",
+      "location": "Chikkamagaluru, Karnataka",
       "date": "Every Friday Departure",
-      "duration": "2 Days",
-      "difficulty": "Moderate",
-      "price": 0,
-      "image": "",
-      "coverImage": "",
-      "featuredImage": "",
-      "shortDescription": "",
-      "description": "",
-      "featured": false,
-      "published": true,
-      "itinerary": "",
+      "duration": "2 Days / 1 Night",
+      "difficulty": "Easy",
+      "price": 4399,
       "inclusions": [
         "Professional Guide & Lead",
         "Meals & Refreshments",
         "First Aid & Safety Gear",
-        "Permits & Local Entry Fees"
+        "Permits & Local Entry Fees",
+        "Transportation"
       ],
-      "created_at": 1787671421898,
-      "updated_at": 1787671421898
+      "shortDescription": "The wild, conquer the rugged trails, and soak in breathtaking panoramic views of the Western Ghats.",
+      "description": "The wild, conquer the rugged trails, and soak in breathtaking panoramic views of the Western Ghats.",
+      "coverImage": "../images/uploads/screenshot-2026-08-27-173038-1787832126115.png",
+      "image": "../images/uploads/screenshot-2026-08-27-173038-1787832126115.png",
+      "itinerary": "../images/uploads/gangadikal-1787832126152.pdf",
+      "published": true,
+      "featured": false,
+      "slug": "Gangadikal",
+      "featuredImage": "",
+      "created_at": 1787832126278,
+      "updated_at": 1787832447989
+    },
+    {
+      "id": "Kodachadri",
+      "name": "Kodachadri via Hidlumane falls",
+      "category": "Western Ghats",
+      "location": "Chikkamagaluru, Karnataka",
+      "date": "Every Friday Departure",
+      "duration": "2 Days / 1 Night",
+      "difficulty": "Moderate",
+      "price": 4499,
+      "inclusions": [
+        "Professional Guide & Lead",
+        "Meals & Refreshments",
+        "First Aid & Safety Gear",
+        "Permits & Local Entry Fees",
+        "Transportation"
+      ],
+      "shortDescription": "Trek through lush forests, chase the waterfalls, cross misty trails and climb your way to breathtaking mountain views.",
+      "description": "Trek through lush forests, chase the waterfalls, cross misty trails and climb your way to breathtaking mountain views.",
+      "coverImage": "../images/uploads/screenshot-2026-08-27-172723-1787831964037.png",
+      "image": "../images/uploads/screenshot-2026-08-27-172723-1787831964037.png",
+      "itinerary": "../images/uploads/kodachadri-1787831964073.pdf",
+      "published": true,
+      "featured": false,
+      "slug": "Kodachadri",
+      "featuredImage": "",
+      "created_at": 1787831964148,
+      "updated_at": 1787832460873
     },
     {
       "id": "kudremukha",
@@ -368,7 +398,15 @@
       "published": true,
       "itinerary": "../assets/documents/Kudremukha.pdf",
       "created_at": 1787670384931,
-      "updated_at": 1787670384931
+      "updated_at": 1787832416299,
+      "inclusions": [
+        "Professional Guide & Lead",
+        "Meals & Refreshments",
+        "First Aid & Safety Gear",
+        "Permits & Local Entry Fees",
+        "Transportation"
+      ],
+      "description": "A breathtaking trek through lush grasslands, endemic forests, and panoramic viewpoints of the Western Ghats."
     },
     {
       "id": "netravathi",
@@ -408,7 +446,15 @@
       "published": true,
       "itinerary": "../assets/documents/Kurinjal.pdf",
       "created_at": 1787670472381,
-      "updated_at": 1787670483978
+      "updated_at": 1787832477180,
+      "inclusions": [
+        "Professional Guide & Lead",
+        "Meals & Refreshments",
+        "First Aid & Safety Gear",
+        "Permits & Local Entry Fees",
+        "Transportation"
+      ],
+      "description": "A route of waterfalls, narrow ridgelines and sweeping views — designed for experienced trekkers who want a true wilderness feel."
     },
     {
       "id": "bandaje-arbi",
@@ -428,10 +474,44 @@
       "published": true,
       "itinerary": "../assets/documents/Bandaje fallse.pdf",
       "created_at": 1787670523717,
-      "updated_at": 1787670523717
+      "updated_at": 1787832491669,
+      "inclusions": [
+        "Professional Guide & Lead",
+        "Meals & Refreshments",
+        "First Aid & Safety Gear",
+        "Permits & Local Entry Fees",
+        "Transportation"
+      ],
+      "description": "A hidden valley trek with river crossings, dense forest and spectacular ridgelines — perfect for nature lovers."
     }
   ],
   "trips": [
+    {
+      "id": "Kedarnath",
+      "name": "Kedarnath",
+      "title": "Kedarnath",
+      "category": "Road Trips",
+      "date": "Delhi to Delhi",
+      "duration": "3 Days / 2 Nights",
+      "location": "Uttarakhand",
+      "price": 9999,
+      "difficulty": "Moderate to Difficult",
+      "inclusions": [
+        "Professional Guide & Lead",
+        "Meals & Refreshments",
+        "First Aid & Safety Gear",
+        "Permits & Local Entry Fees"
+      ],
+      "coverImage": "../images/uploads/screenshot-2026-08-27-174619-1787833056176.png",
+      "image": "../images/uploads/screenshot-2026-08-27-174619-1787833056176.png",
+      "itinerary": "",
+      "shortDescription": "Kedarnath isn’t just a destination — it’s an experience of a lifetime.",
+      "description": "Kedarnath isn’t just a destination — it’s an experience of a lifetime.",
+      "published": true,
+      "slug": "Kedarnath",
+      "created_at": 1787833056237,
+      "updated_at": 1787833056237
+    },
     {
       "id": "gokarna-getaway",
       "name": "Gokarna Getaway",
@@ -452,11 +532,12 @@
         "Professional Guide & Lead",
         "Meals & Refreshments",
         "First Aid & Safety Gear",
-        "Permits & Local Entry Fees"
+        "Permits & Local Entry Fees",
+        "Transportation"
       ],
       "published": true,
       "created_at": 1787670641047,
-      "updated_at": 1787671562076
+      "updated_at": 1787832504858
     }
   ],
   "media": []

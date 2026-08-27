@@ -1,5 +1,31 @@
 [
   {
+    "id": "Kedarnath",
+    "name": "Kedarnath",
+    "title": "Kedarnath",
+    "category": "Road Trips",
+    "date": "Delhi to Delhi",
+    "duration": "3 Days / 2 Nights",
+    "location": "Uttarakhand",
+    "price": 9999,
+    "difficulty": "Moderate to Difficult",
+    "inclusions": [
+      "Professional Guide & Lead",
+      "Meals & Refreshments",
+      "First Aid & Safety Gear",
+      "Permits & Local Entry Fees"
+    ],
+    "coverImage": "../images/uploads/screenshot-2026-08-27-174619-1787833056176.png",
+    "image": "../images/uploads/screenshot-2026-08-27-174619-1787833056176.png",
+    "itinerary": "",
+    "shortDescription": "Kedarnath isn’t just a destination — it’s an experience of a lifetime.",
+    "description": "Kedarnath isn’t just a destination — it’s an experience of a lifetime.",
+    "published": true,
+    "slug": "Kedarnath",
+    "created_at": 1787833056237,
+    "updated_at": 1787833056237
+  },
+  {
     "id": "gokarna-getaway",
     "name": "Gokarna Getaway",
     "title": "Gokarna Getaway",
@@ -19,10 +45,11 @@
       "Professional Guide & Lead",
       "Meals & Refreshments",
       "First Aid & Safety Gear",
-      "Permits & Local Entry Fees"
+      "Permits & Local Entry Fees",
+      "Transportation"
     ],
     "published": true,
     "created_at": 1787670641047,
-    "updated_at": 1787671562076
+    "updated_at": 1787832504858
   }
 ]
