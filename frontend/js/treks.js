@@ -269,6 +269,72 @@
             `;
           }
         })()}
+
+        <!-- What's Included vs Excluded Grid -->
+        <h4 class="h5 fw-bold text-white mb-3">Package Inclusions & Exclusions</h4>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="included-box h-100">
+              <h5 class="fw-bold mb-3"><i class="bi bi-check-circle-fill me-2"></i>What's Included</h5>
+              ${inclusionsList.map(inc => `
+                <div class="inclusion-item">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>${escapeHtml(inc)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="excluded-box h-100">
+              <h5 class="fw-bold mb-3"><i class="bi bi-x-circle-fill me-2"></i>What's Excluded</h5>
+              <div class="inclusion-item"><i class="bi bi-x-circle-fill"></i><span>Personal expenses & GST</span></div>
+              <div class="inclusion-item"><i class="bi bi-x-circle-fill"></i><span>Travel insurance</span></div>
+              <div class="inclusion-item"><i class="bi bi-x-circle-fill"></i><span>Any meals or beverages not specified</span></div>
+              <div class="inclusion-item"><i class="bi bi-x-circle-fill"></i><span>Emergency evacuations or medical expenses</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Frequently Asked Questions -->
+        <h4 class="h5 fw-bold text-white mb-3">Frequently Asked Questions</h4>
+        <div class="faq-accordion mb-4" id="trekFaqAccordion">
+          <div class="faq-item">
+            <button class="faq-question" type="button" onclick="toggleFaq(this)">
+              <span>What level of fitness is required for this trail?</span>
+              <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+              This experience is suitable for beginners to regular outdoor enthusiasts. We maintain a comfortable group pace led by experienced wilderness guides.
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" onclick="toggleFaq(this)">
+              <span>What essential items should I pack?</span>
+              <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+              A 30-40L backpack, sturdy trekking shoes with good grip, reusable water bottle, rain poncho/jacket, quick-dry clothes, flashlight/headlamp, and personal medication.
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" onclick="toggleFaq(this)">
+              <span>Is transportation included from the pickup location?</span>
+              <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+              Yes! Round-trip comfortable transport from designated pickup points in Bengaluru / nearby hubs is included in standard packages.
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" onclick="toggleFaq(this)">
+              <span>How do I confirm my slot for an upcoming date?</span>
+              <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+              Simply click the "Book on WhatsApp" button to connect directly with our team. We'll share itinerary details, confirm slot availability, and send payment instructions.
+            </div>
+          </div>
+        </div>
       </div>
     `;
 
@@ -282,14 +348,34 @@
           <ul class="list-unstyled small text-light space-y-2 mb-4">
             ${inclusionsList.map(inc => `<li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> ${escapeHtml(inc)}</li>`).join('')}
           </ul>
-          <button class="btn btn-cta w-100 py-3 text-uppercase fw-bold" data-name="${escapeHtml(trek.name || trek.title)}" data-date="${escapeHtml(dateText)}" data-location="${escapeHtml(trek.location || 'Western Ghats')}" onclick="handleBooking(this)">
+          <button class="btn btn-cta w-100 py-3 text-uppercase fw-bold mb-3" data-name="${escapeHtml(trek.name || trek.title)}" data-date="${escapeHtml(dateText)}" data-location="${escapeHtml(trek.location || 'Western Ghats')}" onclick="handleBooking(this)">
             BOOK ON WHATSAPP <i class="bi bi-whatsapp ms-2"></i>
           </button>
+          <div class="text-center">
+            <small class="text-muted"><i class="bi bi-shield-check text-success me-1"></i> Instant confirmation & 100% safe booking</small>
+          </div>
         </div>
       </div>
     `;
 
-    container.innerHTML = heroHTML + bookingHTML;
+    // Related Treks Section
+    const relatedTreks = allItems.filter(t => t && t.id !== trek.id && t.published !== false).slice(0, 3);
+    let relatedHTML = '';
+    if(relatedTreks.length > 0) {
+      relatedHTML = `
+        <div class="col-12 mt-5 pt-4 border-top border-secondary border-opacity-25">
+          <div class="mb-4">
+            <span class="category-kicker mb-1">MORE TRAILS TO EXPLORE</span>
+            <h3 class="h3 fw-bold text-white mb-0">YOU MIGHT ALSO LIKE</h3>
+          </div>
+          <div class="row g-4">
+            ${relatedTreks.map((t, idx) => renderTrekCard(t, idx)).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = heroHTML + bookingHTML + relatedHTML;
 
     // Mobile sticky booking bar
     const mobileBooking = document.getElementById('mobile-booking-bar');

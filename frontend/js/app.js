@@ -238,4 +238,22 @@
       });
     }
   });
+
+  // Global FAQ accordion toggle handler
+  window.toggleFaq = function(btn) {
+    if (!btn) return;
+    const answer = btn.nextElementSibling;
+    const isActive = btn.classList.contains('active');
+
+    const accordion = btn.closest('.faq-accordion');
+    if (accordion) {
+      accordion.querySelectorAll('.faq-question').forEach(q => q.classList.remove('active'));
+      accordion.querySelectorAll('.faq-answer').forEach(a => a.classList.remove('show'));
+    }
+
+    if (!isActive && answer) {
+      btn.classList.add('active');
+      answer.classList.add('show');
+    }
+  };
 })();
