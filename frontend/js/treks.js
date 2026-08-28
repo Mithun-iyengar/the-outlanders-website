@@ -169,6 +169,19 @@
       return;
     }
 
+    const trekTitle = trek.name || trek.title || 'Trek Details';
+    document.title = `${trekTitle} — The Outlanders`;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if(metaDesc && (trek.shortDescription || trek.description)) {
+      metaDesc.setAttribute('content', (trek.shortDescription || trek.description).slice(0, 160));
+    }
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if(ogTitle) ogTitle.setAttribute('content', `${trekTitle} — The Outlanders`);
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    if(ogDesc && (trek.shortDescription || trek.description)) {
+      ogDesc.setAttribute('content', (trek.shortDescription || trek.description).slice(0, 160));
+    }
+
     const priceFormatted = (trek.price || trek.price === 0) ? `₹${Number(trek.price).toLocaleString('en-IN')}` : 'Contact for Price';
     const dateText = trek.date || 'Every Friday Departure';
     const imageSrc = trek.featuredImage || trek.coverImage || trek.image || imageFallbackSrc();

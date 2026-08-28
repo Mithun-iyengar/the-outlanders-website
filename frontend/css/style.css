@@ -980,6 +980,32 @@ html {
 }
 
 /* ==================================================
+   ACCESSIBILITY FOCUS STATES & TOUCH TARGETS
+   ================================================== */
+:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 3px !important;
+}
+
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+a:focus-visible {
+  box-shadow: 0 0 0 3px var(--accent-glow) !important;
+}
+
+@media(max-width: 767px) {
+  .navbar-nav .nav-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .form-control, .form-select, .btn {
+    min-height: 44px;
+  }
+}
+
+/* ==================================================
    SKELETON LOADING STATES
    ================================================== */
 .skeleton-card {
