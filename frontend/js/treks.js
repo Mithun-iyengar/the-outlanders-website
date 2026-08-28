@@ -186,13 +186,22 @@
     const dateText = trek.date || 'Every Friday Departure';
     const imageSrc = trek.featuredImage || trek.coverImage || trek.image || imageFallbackSrc();
 
-    // Package Inclusions
+    // Package Inclusions & Exclusions
     let inclusionsList = ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'];
     if(trek.inclusions){
       if(Array.isArray(trek.inclusions) && trek.inclusions.length > 0){
         inclusionsList = trek.inclusions;
       } else if(typeof trek.inclusions === 'string' && trek.inclusions.trim()){
         inclusionsList = trek.inclusions.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      }
+    }
+
+    let exclusionsList = ['Personal expenses & GST', 'Travel insurance', 'Any meals or beverages not specified', 'Emergency evacuations or medical expenses'];
+    if(trek.exclusions){
+      if(Array.isArray(trek.exclusions) && trek.exclusions.length > 0){
+        exclusionsList = trek.exclusions;
+      } else if(typeof trek.exclusions === 'string' && trek.exclusions.trim()){
+        exclusionsList = trek.exclusions.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
       }
     }
 
@@ -300,10 +309,12 @@
           <div class="col-md-6">
             <div class="excluded-box h-100">
               <h5 class="fw-bold mb-3"><i class="bi bi-x-circle-fill me-2"></i>What's Excluded</h5>
-              <div class="inclusion-item"><i class="bi bi-x-circle-fill"></i><span>Personal expenses & GST</span></div>
-              <div class="inclusion-item"><i class="bi bi-x-circle-fill"></i><span>Travel insurance</span></div>
-              <div class="inclusion-item"><i class="bi bi-x-circle-fill"></i><span>Any meals or beverages not specified</span></div>
-              <div class="inclusion-item"><i class="bi bi-x-circle-fill"></i><span>Emergency evacuations or medical expenses</span></div>
+              ${exclusionsList.map(exc => `
+                <div class="inclusion-item">
+                  <i class="bi bi-x-circle-fill"></i>
+                  <span>${escapeHtml(exc)}</span>
+                </div>
+              `).join('')}
             </div>
           </div>
         </div>

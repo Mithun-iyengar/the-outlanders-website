@@ -88,6 +88,35 @@ const DEFAULT_HOMEPAGE = {
     btnText: "EXPLORE UPCOMING TREKS",
     btnLink: "treks.html",
     bgImage: "../images/hero/scroll-back.jpg"
+  },
+  reviews: {
+    enabled: true,
+    eyebrow: "VOICES FROM THE TRAIL",
+    title: "WHAT OUR ADVENTURERS SAY",
+    sub: "Real stories and reviews from travelers who explored the wild with The Outlanders.",
+    items: [
+      {
+        id: "rev-1",
+        author: "Ananya Sharma",
+        trip: "Kudremukha Trek",
+        rating: 5,
+        quote: "Kudremukha trek with The Outlanders was pure magic. The leads were super helpful, food was awesome, and safety was top-notch. Can't wait for my next trail!"
+      },
+      {
+        id: "rev-2",
+        author: "Rahul Kulkarni",
+        trip: "Gokarna Camping",
+        rating: 5,
+        quote: "Best weekend escape ever! The Gokarna beach camping trip was meticulously planned, from pickup to beach bonfire. 10/10 recommendation!"
+      },
+      {
+        id: "rev-3",
+        author: "Priya Nair",
+        trip: "Netravathi Peak",
+        rating: 5,
+        quote: "As a solo female traveler, I felt 100% safe and welcomed. Met incredible people who became lifelong friends. The Outlanders vibe is unmatched!"
+      }
+    ]
   }
 };
 

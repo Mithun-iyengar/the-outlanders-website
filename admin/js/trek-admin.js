@@ -303,6 +303,13 @@
           <div class="form-text text-muted small">Enter each package feature on a new line.</div>
         </div>
 
+        <!-- Package Exclusions Section -->
+        <div class="card p-3 mb-3 border">
+          <h6 class="fw-bold mb-2"><i class="bi bi-x-circle-fill text-danger me-2"></i>Package Exclusions (One per line)</h6>
+          <textarea id="exclusions" class="form-control" rows="4" placeholder="Personal expenses & GST&#10;Travel insurance&#10;Any meals or beverages not specified&#10;Emergency evacuations or medical expenses"></textarea>
+          <div class="form-text text-muted small">Enter each excluded item on a new line.</div>
+        </div>
+
         <!-- Trek Cover Image Section -->
         <div class="card p-3 mb-3 border">
           <h6 class="fw-bold mb-2"><i class="bi bi-image text-primary me-2"></i>Trek Cover Image</h6>
@@ -446,6 +453,11 @@
       if (Array.isArray(incVal)) incVal = incVal.join('\n');
       if (document.getElementById('inclusions')) document.getElementById('inclusions').value = incVal || defaultInclusions;
 
+      const defaultExclusions = "Personal expenses & GST\nTravel insurance\nAny meals or beverages not specified\nEmergency evacuations or medical expenses";
+      let excVal = trek.exclusions;
+      if (Array.isArray(excVal)) excVal = excVal.join('\n');
+      if (document.getElementById('exclusions')) document.getElementById('exclusions').value = excVal || defaultExclusions;
+
       if (document.getElementById('price')) document.getElementById('price').value = trek.price || '';
       if (document.getElementById('published')) document.getElementById('published').value = trek.published !== false ? 'true' : 'false';
       if (document.getElementById('featured')) document.getElementById('featured').value = trek.featured ? 'true' : 'false';
@@ -470,6 +482,8 @@
       const titleVal = getVal('name') || getVal('title');
       const rawInc = getVal('inclusions');
       const incList = rawInc ? rawInc.split('\n').map(s => s.trim()).filter(Boolean) : [];
+      const rawExc = getVal('exclusions');
+      const excList = rawExc ? rawExc.split('\n').map(s => s.trim()).filter(Boolean) : [];
       const idVal = getVal('id') || (titleVal ? titleVal.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '');
 
       return {
@@ -482,6 +496,7 @@
         difficulty: getVal('difficulty', 'Moderate'),
         price: Number(getVal('price')) || 0,
         inclusions: incList.length > 0 ? incList : ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
+        exclusions: excList.length > 0 ? excList : ['Personal expenses & GST', 'Travel insurance', 'Any meals or beverages not specified', 'Emergency evacuations or medical expenses'],
         shortDescription: getVal('shortDescription'),
         description: getVal('description'),
         coverImage: getVal('coverImage'),

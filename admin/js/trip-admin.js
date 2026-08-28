@@ -293,6 +293,13 @@
           <div class="form-text text-muted small">Enter each package feature on a new line.</div>
         </div>
 
+        <!-- Package Exclusions Section -->
+        <div class="card p-3 mb-3 border">
+          <h6 class="fw-bold mb-2"><i class="bi bi-x-circle-fill text-danger me-2"></i>Package Exclusions (One per line)</h6>
+          <textarea id="exclusions" class="form-control" rows="4" placeholder="Personal expenses & GST&#10;Travel insurance&#10;Any meals or beverages not specified&#10;Emergency evacuations or medical expenses"></textarea>
+          <div class="form-text text-muted small">Enter each excluded item on a new line.</div>
+        </div>
+
         <!-- Trip Cover Image Section -->
         <div class="card p-3 mb-3 border">
           <h6 class="fw-bold mb-2"><i class="bi bi-image text-primary me-2"></i>Trip Cover Image</h6>
@@ -446,6 +453,11 @@
       if (Array.isArray(incVal)) incVal = incVal.join('\n');
       if (document.getElementById('inclusions')) document.getElementById('inclusions').value = incVal || defaultInclusions;
 
+      const defaultExclusions = "Personal expenses & GST\nTravel insurance\nAny meals or beverages not specified\nEmergency evacuations or medical expenses";
+      let excVal = trip.exclusions;
+      if (Array.isArray(excVal)) excVal = excVal.join('\n');
+      if (document.getElementById('exclusions')) document.getElementById('exclusions').value = excVal || defaultExclusions;
+
       const imgVal = trip.coverImage || trip.image || '';
       if (document.getElementById('coverImage')) document.getElementById('coverImage').value = imgVal;
 
@@ -468,6 +480,8 @@
       const titleVal = getVal('title') || getVal('name');
       const rawInc = getVal('inclusions');
       const incList = rawInc ? rawInc.split('\n').map(s => s.trim()).filter(Boolean) : [];
+      const rawExc = getVal('exclusions');
+      const excList = rawExc ? rawExc.split('\n').map(s => s.trim()).filter(Boolean) : [];
       const idVal = getVal('id') || (titleVal ? titleVal.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '');
 
       return {
@@ -481,6 +495,7 @@
         price: Number(getVal('price')) || 0,
         difficulty: getVal('difficulty', 'Easy'),
         inclusions: incList.length > 0 ? incList : ['Professional Guide & Lead', 'Meals & Refreshments', 'First Aid & Safety Gear', 'Permits & Local Entry Fees'],
+        exclusions: excList.length > 0 ? excList : ['Personal expenses & GST', 'Travel insurance', 'Any meals or beverages not specified', 'Emergency evacuations or medical expenses'],
         coverImage: getVal('coverImage'),
         image: getVal('coverImage'),
         itinerary: getVal('itinerary'),

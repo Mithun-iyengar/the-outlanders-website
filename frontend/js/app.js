@@ -237,6 +237,73 @@
         return new bootstrap.Tooltip(tooltipTriggerEl);
       });
     }
+
+    // 8. Dynamic Homepage Reviews Hydration
+    async function loadHomepageReviews() {
+      const reviewsSection = document.getElementById('reviews-section');
+      if (!reviewsSection) return;
+      try {
+        let hpData = null;
+        if (window.DataAPI && typeof window.DataAPI.getHomepageContent === 'function') {
+          hpData = await window.DataAPI.getHomepageContent();
+        } else {
+          const r = await fetch('../data/store.json');
+          if (r.ok) {
+            const j = await r.json();
+            hpData = j.homepage;
+          }
+        }
+        if (!hpData || !hpData.reviews || hpData.reviews.enabled === false || !Array.isArray(hpData.reviews.items) || hpData.reviews.items.length === 0) {
+          reviewsSection.style.display = 'none';
+          return;
+        }
+
+        reviewsSection.style.display = 'block';
+        const rev = hpData.reviews;
+        const eyebrowEl = document.getElementById('revEyebrow');
+        const titleEl = document.getElementById('revTitle');
+        const subEl = document.getElementById('revSub');
+        const listEl = document.getElementById('revListGrid');
+
+        if (eyebrowEl) eyebrowEl.textContent = rev.eyebrow || 'VOICES FROM THE TRAIL';
+        if (titleEl) titleEl.textContent = rev.title || 'WHAT OUR ADVENTURERS SAY';
+        if (subEl) subEl.textContent = rev.sub || '';
+
+        function escapeHtml(str) {
+          return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        if (listEl) {
+          listEl.innerHTML = rev.items.map(item => {
+            const ratingNum = Math.min(5, Math.max(1, parseInt(item.rating || 5)));
+            const stars = Array(ratingNum).fill('<i class="bi bi-star-fill"></i>').join('');
+            const firstLetter = (item.author || 'A').trim().charAt(0).toUpperCase();
+            return `
+              <div class="col-12 col-md-4">
+                <div class="testimonial-card">
+                  <div>
+                    <div class="rating-stars">${stars}</div>
+                    <p class="testimonial-quote">"${escapeHtml(item.quote || '')}"</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-avatar">${firstLetter}</div>
+                    <div>
+                      <div class="author-name">${escapeHtml(item.author || 'Adventurer')}</div>
+                      <div class="author-trip">${escapeHtml(item.trip || 'Trek')}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch(e) {
+        console.warn('Failed to load reviews:', e);
+      }
+    }
+
+    loadHomepageReviews();
+    window.addEventListener('cms-data-updated', loadHomepageReviews);
   });
 
   // Global FAQ accordion toggle handler

@@ -235,6 +235,39 @@
         </div>
       </div>
 
+      <!-- 5. Reviews / Testimonials Manager -->
+      <div class="card p-4 shadow-sm border-0 mb-4 section-card-reviews" style="background: #FFFFFF;">
+        <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3 section-banner" style="background: linear-gradient(135deg, #065F46 0%, #047857 100%);">
+          <div class="d-flex align-items-center gap-3">
+            <h5 class="fw-bold mb-0 text-white"><i class="bi bi-chat-square-quote-fill text-warning me-2"></i>5. Reviews / Testimonials Section</h5>
+            <div class="form-check form-switch m-0 text-white">
+              <input class="form-check-input" type="checkbox" id="revEnabled" checked>
+              <label class="form-check-label small fw-bold text-white" for="revEnabled">Enable Reviews Section</label>
+            </div>
+          </div>
+          <button id="addReviewBtn" type="button" class="btn btn-sm btn-warning text-dark fw-bold px-3"><i class="bi bi-plus-lg me-1"></i> Add Review</button>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Eyebrow Text</label>
+            <input type="text" id="revEyebrowInput" class="form-control" placeholder="VOICES FROM THE TRAIL">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Section Heading</label>
+            <input type="text" id="revTitleInput" class="form-control" placeholder="WHAT OUR ADVENTURERS SAY">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Subtitle</label>
+            <input type="text" id="revSubInput" class="form-control" placeholder="Real stories and reviews...">
+          </div>
+        </div>
+
+        <div id="reviewsList" class="row g-3">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
       <!-- Floating Save Bar -->
       <div class="position-sticky bottom-0 bg-white p-3 border rounded shadow-lg d-flex justify-content-between align-items-center" style="z-index: 1000;">
         <span class="text-muted small fw-bold"><i class="bi bi-info-circle text-primary me-1"></i> Save all homepage section changes to reflect live on the website.</span>
@@ -478,6 +511,71 @@
         document.getElementById('ctaBgImage').value = hpData.finalCta.bgImage || '../images/hero/scroll-back.jpg';
       }
 
+      // Populate Reviews
+      let reviewItems = (hpData.reviews && hpData.reviews.items) ? JSON.parse(JSON.stringify(hpData.reviews.items)) : [];
+      const revEnabledEl = document.getElementById('revEnabled');
+      if (revEnabledEl) revEnabledEl.checked = hpData.reviews ? (hpData.reviews.enabled !== false) : true;
+      document.getElementById('revEyebrowInput').value = hpData.reviews?.eyebrow || 'VOICES FROM THE TRAIL';
+      document.getElementById('revTitleInput').value = hpData.reviews?.title || 'WHAT OUR ADVENTURERS SAY';
+      document.getElementById('revSubInput').value = hpData.reviews?.sub || 'Real stories and reviews from travelers who explored the wild with The Outlanders.';
+
+      function renderReviewsList() {
+        const listEl = document.getElementById('reviewsList');
+        if (!listEl) return;
+        listEl.innerHTML = reviewItems.map((r, i) => `
+          <div class="col-md-6 col-lg-4">
+            <div class="border rounded p-3 bg-white h-100 shadow-sm">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-success small">Review #${i + 1}</span>
+                <button type="button" class="btn btn-sm btn-outline-danger delReview" data-idx="${i}"><i class="bi bi-trash"></i> Delete</button>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small fw-bold mb-1">Author Name</label>
+                <input type="text" class="form-control form-control-sm revAuthor" value="${r.author || ''}" data-idx="${i}">
+              </div>
+              <div class="mb-2">
+                <label class="form-label small fw-bold mb-1">Trip/Trek Name</label>
+                <input type="text" class="form-control form-control-sm revTrip" value="${r.trip || ''}" data-idx="${i}">
+              </div>
+              <div class="mb-2">
+                <label class="form-label small fw-bold mb-1">Rating (1-5)</label>
+                <input type="number" min="1" max="5" class="form-control form-control-sm revRating" value="${r.rating || 5}" data-idx="${i}">
+              </div>
+              <div class="mb-2">
+                <label class="form-label small fw-bold mb-1">Review / Quote Text</label>
+                <textarea class="form-control form-control-sm revQuote" rows="3" data-idx="${i}">${r.quote || ''}</textarea>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        document.querySelectorAll('.revAuthor').forEach(inp => inp.addEventListener('input', e => { reviewItems[e.target.dataset.idx].author = e.target.value; markDirty(); }));
+        document.querySelectorAll('.revTrip').forEach(inp => inp.addEventListener('input', e => { reviewItems[e.target.dataset.idx].trip = e.target.value; markDirty(); }));
+        document.querySelectorAll('.revRating').forEach(inp => inp.addEventListener('input', e => { reviewItems[e.target.dataset.idx].rating = parseInt(e.target.value) || 5; markDirty(); }));
+        document.querySelectorAll('.revQuote').forEach(inp => inp.addEventListener('input', e => { reviewItems[e.target.dataset.idx].quote = e.target.value; markDirty(); }));
+        document.querySelectorAll('.delReview').forEach(btn => btn.addEventListener('click', function() {
+          const idx = parseInt(this.dataset.idx);
+          if (confirm('Delete this review?')) {
+            reviewItems.splice(idx, 1);
+            renderReviewsList();
+            markDirty();
+          }
+        }));
+      }
+      renderReviewsList();
+
+      document.getElementById('addReviewBtn').addEventListener('click', () => {
+        reviewItems.push({
+          id: 'rev-' + Date.now(),
+          author: 'New Reviewer',
+          trip: 'Western Ghats Trek',
+          rating: 5,
+          quote: 'Awesome trek experience with The Outlanders!'
+        });
+        renderReviewsList();
+        markDirty();
+      });
+
       // Trigger Save Modal
       const triggerSaveHpBtn = document.getElementById('triggerSaveHpBtn');
       if (triggerSaveHpBtn) {
@@ -538,6 +636,13 @@
               btnText: document.getElementById('ctaBtnText').value.trim(),
               btnLink: document.getElementById('ctaBtnLink').value.trim(),
               bgImage: document.getElementById('ctaBgImage').value.trim()
+            },
+            reviews: {
+              enabled: document.getElementById('revEnabled').checked,
+              eyebrow: document.getElementById('revEyebrowInput').value.trim(),
+              title: document.getElementById('revTitleInput').value.trim(),
+              sub: document.getElementById('revSubInput').value.trim(),
+              items: reviewItems
             }
           };
 
