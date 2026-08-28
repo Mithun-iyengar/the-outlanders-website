@@ -53,13 +53,39 @@ if (cors) {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Static Assets Serving
-app.use('/frontend', express.static(path.join(__dirname, '../frontend')));
-app.use('/admin', express.static(path.join(__dirname, '../admin')));
-app.use('/data', express.static(path.join(__dirname, '../data')));
-app.use('/images', express.static(path.join(__dirname, '../images')));
-app.use('/assets', express.static(path.join(__dirname, '../assets')));
-app.use(express.static(path.join(__dirname, '../')));
+// Static Assets Serving with Caching Headers
+const staticCacheOptions = {
+  maxAge: '1y',
+  immutable: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+};
+
+app.use('/images', express.static(path.join(__dirname, '../images'), staticCacheOptions));
+app.use('/assets', express.static(path.join(__dirname, '../assets'), staticCacheOptions));
+app.use('/frontend', express.static(path.join(__dirname, '../frontend'), staticCacheOptions));
+app.use('/admin', express.static(path.join(__dirname, '../admin'), { maxAge: 0 }));
+app.use('/data', express.static(path.join(__dirname, '../data'), staticCacheOptions));
+app.use(express.static(path.join(__dirname, '../'), staticCacheOptions));
+
+// Middleware for API Caching Headers
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET') {
+    if (req.path.startsWith('/auth')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+    }
+  } else {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  }
+  next();
+});
 
 // === HEALTH CHECK ENDPOINT ===
 app.get('/api/health', (req, res) => {

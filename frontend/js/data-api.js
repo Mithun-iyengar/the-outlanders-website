@@ -43,44 +43,90 @@
     return headers;
   }
 
+  const inflightRequests = new Map();
+  const apiCache = new Map();
+  const CACHE_TTL = 60000; // 60s cache for GET requests
+
+  function clearApiCache() {
+    apiCache.clear();
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('cms-data-updated', clearApiCache);
+  }
+
   async function apiRequest(endpoint, options = {}) {
+    const method = (options.method || 'GET').toUpperCase();
+
+    if (method !== 'GET') {
+      clearApiCache();
+    } else {
+      const cached = apiCache.get(endpoint);
+      if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        return JSON.parse(JSON.stringify(cached.data));
+      }
+      if (inflightRequests.has(endpoint)) {
+        const data = await inflightRequests.get(endpoint);
+        return JSON.parse(JSON.stringify(data));
+      }
+    }
+
     const url = `${API_BASE}${endpoint}`;
     options.headers = Object.assign({}, getHeaders(options.isJSON !== false), options.headers || {});
     if (options.isJSON === false) delete options.headers['Content-Type'];
 
-    try {
-      const res = await fetch(url, options);
-      const contentType = res.headers.get('content-type') || '';
+    const promise = (async () => {
+      try {
+        const res = await fetch(url, options);
+        const contentType = res.headers.get('content-type') || '';
 
-      if (!res.ok) {
-        let errData = {};
-        if (contentType.includes('application/json')) {
-          try { errData = await res.json(); } catch(e){}
-        }
-        if (res.status === 401) {
-          try {
-            sessionStorage.removeItem('outlanders_auth_token');
-            localStorage.removeItem('outlanders_auth_token');
-          } catch(e){}
-          if (typeof window !== 'undefined' && window.location.pathname.includes('/admin/') && !window.location.pathname.endsWith('/index.html')) {
-            alert('Your admin login session has expired. Please log in again.');
-            window.location.href = 'index.html';
+        if (!res.ok) {
+          let errData = {};
+          if (contentType.includes('application/json')) {
+            try { errData = await res.json(); } catch(e){}
           }
+          if (res.status === 401) {
+            try {
+              sessionStorage.removeItem('outlanders_auth_token');
+              localStorage.removeItem('outlanders_auth_token');
+            } catch(e){}
+            if (typeof window !== 'undefined' && window.location.pathname.includes('/admin/') && !window.location.pathname.endsWith('/index.html')) {
+              alert('Your admin login session has expired. Please log in again.');
+              window.location.href = 'index.html';
+            }
+          }
+          const errorMsg = errData.error || `HTTP ${res.status}: ${res.statusText}`;
+          throw new Error(errorMsg);
         }
-        const errorMsg = errData.error || `HTTP ${res.status}: ${res.statusText}`;
-        throw new Error(errorMsg);
-      }
 
-      if (contentType.includes('application/json')) {
-        return await res.json();
-      } else {
-        const text = await res.text();
-        throw new Error(`Non-JSON response from ${endpoint} (${res.status}): ${text.substring(0, 80)}`);
+        let result;
+        if (contentType.includes('application/json')) {
+          result = await res.json();
+        } else {
+          const text = await res.text();
+          throw new Error(`Non-JSON response from ${endpoint} (${res.status}): ${text.substring(0, 80)}`);
+        }
+
+        if (method === 'GET') {
+          apiCache.set(endpoint, { timestamp: Date.now(), data: result });
+        }
+        return result;
+      } catch (err) {
+        console.warn(`API Error [${endpoint}]:`, err.message);
+        throw err;
+      } finally {
+        if (method === 'GET') {
+          inflightRequests.delete(endpoint);
+        }
       }
-    } catch (err) {
-      console.warn(`API Error [${endpoint}]:`, err.message);
-      throw err;
+    })();
+
+    if (method === 'GET') {
+      inflightRequests.set(endpoint, promise);
     }
+
+    const data = await promise;
+    return JSON.parse(JSON.stringify(data));
   }
 
   // === DEFAULT FALLBACK DATA ===
@@ -548,6 +594,7 @@
   // Expose DataAPI globally
   window.DataAPI = {
     init: loadInitial,
+    clearCache: clearApiCache,
     getSiteSettings, updateSiteSettings,
     getHomepageContent, updateHomepageContent,
     getHeroImage, updateHeroImage,
@@ -560,7 +607,5 @@
     getMediaList, addMedia, deleteMedia,
     uploadFile
   };
-
-  loadInitial();
 
 })();

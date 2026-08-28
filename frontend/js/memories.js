@@ -2,7 +2,7 @@
 (function(){
   'use strict';
 
-  const BATCH_SIZE = 15;
+  const BATCH_SIZE = 10;
   let allMemories = [];
   let currentFilteredMemories = [];
   let displayedCount = BATCH_SIZE;
@@ -108,7 +108,7 @@
       return `
         <div class="col reveal reveal-up" style="--reveal-delay: ${revealDelay}ms;">
           <div class="gallery-card ${floatClass}" data-index="${index}">
-            <img src="${mem.image}" alt="Memory photograph" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='../images/hero/scroll-back.jpg'">
+            <img src="${mem.image}" alt="Memory photograph" width="300" height="375" style="aspect-ratio: 4/5; object-fit: cover;" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='../images/hero/scroll-back.jpg'">
           </div>
         </div>
       `;

@@ -17,3 +17,6 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Test artifacts in uploads
+images/uploads/*test*
+images/uploads/*e2e*

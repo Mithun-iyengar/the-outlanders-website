@@ -46,7 +46,7 @@
       <div class="col-12 col-md-6 col-lg-4 reveal reveal-up" style="--reveal-delay:${revealDelay}ms">
         <div class="trek-card" data-id="${escapeHtml(cardId)}">
           <div class="card-img" role="img" aria-label="${escapeHtml(trek.name || trek.title)}">
-            <img src="${escapeHtml(safeImageEsc)}" alt="${escapeHtml(trek.name || trek.title)}" loading="lazy" onerror="this.onerror=null;this.src='${imageFallbackSrc()}'" />
+            <img src="${escapeHtml(safeImageEsc)}" alt="${escapeHtml(trek.name || trek.title)}" loading="lazy" decoding="async" width="400" height="250" style="aspect-ratio: 16/10; object-fit: cover;" onerror="this.onerror=null;this.src='${imageFallbackSrc()}'" />
             <div class="location-badge"><i class="bi bi-geo-alt-fill me-1"></i>${escapeHtml(trek.category || trek.location || 'Western Ghats')}</div>
           </div>
           <div class="card-body">
@@ -344,17 +344,18 @@
   };
 
   window.addEventListener('cms-data-updated', () => {
-    renderTrips();
-    renderTrekCards();
-    renderTrekDetails();
+    if (document.querySelector('#trip-list')) renderTrips();
+    if (document.querySelector('#trek-list')) renderTrekCards();
+    if (document.querySelector('#featured-treks')) renderFeaturedTreks();
+    if (document.querySelector('#trek-detail')) renderTrekDetails();
   });
 
   document.addEventListener('DOMContentLoaded', function(){
-    renderFeaturedTreks();
-    renderFeaturedDestinations();
-    renderTrekCards();
-    renderTrips();
-    renderTrekDetails();
+    if (document.querySelector('#featured-treks')) renderFeaturedTreks();
+    if (document.querySelector('#featured-destinations')) renderFeaturedDestinations();
+    if (document.querySelector('#trek-list')) renderTrekCards();
+    if (document.querySelector('#trip-list')) renderTrips();
+    if (document.querySelector('#trek-detail')) renderTrekDetails();
   });
 
 })();
