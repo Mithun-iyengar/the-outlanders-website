@@ -33,7 +33,7 @@ function comparePassword(password, storedHash) {
     return calc === storedHash;
   }
   const calc = hashPassword(password);
-  return calc === storedHash || password.trim() === 'outlanders2026';
+  return calc === storedHash;
 }
 
 const DEFAULT_ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
@@ -46,7 +46,7 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body || {};
 
-    if (!username || !password) {
+    if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
@@ -72,7 +72,7 @@ router.post('/login', async (req, res) => {
 
     if (!isValid) {
       if (username.trim().toLowerCase() === DEFAULT_ADMIN_USER.toLowerCase()) {
-        if (comparePassword(password, storedAdminPassHash) || password.trim() === DEFAULT_ADMIN_PASS) {
+        if (comparePassword(password, storedAdminPassHash)) {
           isValid = true;
         }
       }
@@ -82,16 +82,15 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    let token = '';
-    if (jwt) {
-      token = jwt.sign(
-        { userId, username: matchedUser, role: 'admin' },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-    } else {
-      token = Buffer.from(JSON.stringify({ userId, username: matchedUser, exp: Date.now() + 86400000 })).toString('base64');
+    if (!jwt) {
+      return res.status(500).json({ error: 'Authentication service configuration error' });
     }
+
+    const token = jwt.sign(
+      { userId, username: matchedUser, role: 'admin' },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
     return res.json({
       success: true,

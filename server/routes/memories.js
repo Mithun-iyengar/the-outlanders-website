@@ -4,8 +4,8 @@ const router = express.Router();
 const store = require('../services/store');
 const { authMiddleware } = require('../middleware/auth');
 
-// GET /api/memories/debug - Public Production Diagnostic Endpoint
-router.get('/debug', async (req, res) => {
+// GET /api/memories/debug - Protected Production Diagnostic Endpoint
+router.get('/debug', authMiddleware, async (req, res) => {
   const db = require('../config/db');
   try {
     const isConnected = db.isDbConnected();
